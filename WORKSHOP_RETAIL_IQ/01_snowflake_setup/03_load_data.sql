@@ -78,8 +78,32 @@ COPY INTO STORES
 -- ==================================================================================
 -- LOAD: CUSTOMER_REVIEWS (~15,000 rows)
 -- ==================================================================================
+-- CSV columns: review_id, order_id, customer_id, product_id, product_name,
+--              category, store_region, rating, sentiment_label, review_date,
+--              review_text, verified_purchase
+-- Table columns: review_id, order_id, customer_id, product_name, category,
+--                review_text, rating, sentiment_label, review_date, store_region,
+--                verified_purchase
+-- Fix: skip $4 (product_id not in table); reorder store_region ($7→col10),
+--      review_text ($11→col6), rating ($8→col7).
 COPY INTO CUSTOMER_REVIEWS
-    FROM @RETAILIQ_STG/customer_reviews.csv
+    (review_id, order_id, customer_id, product_name, category,
+     review_text, rating, sentiment_label, review_date, store_region, verified_purchase)
+    FROM (
+        SELECT
+            t.$1,           -- review_id
+            t.$2,           -- order_id
+            t.$3,           -- customer_id
+            t.$5,           -- product_name  (skip $4 = product_id)
+            t.$6,           -- category
+            t.$11,          -- review_text
+            t.$8,           -- rating
+            t.$9,           -- sentiment_label
+            t.$10,          -- review_date
+            t.$7,           -- store_region
+            t.$12           -- verified_purchase
+        FROM @RETAILIQ_STG/customer_reviews.csv t
+    )
     FILE_FORMAT = (
         TYPE = 'CSV'
         FIELD_DELIMITER = ','
@@ -91,8 +115,28 @@ COPY INTO CUSTOMER_REVIEWS
 -- ==================================================================================
 -- LOAD: SUPPORT_TICKETS (~8,000 rows)
 -- ==================================================================================
+-- CSV columns: ticket_id, customer_id, order_id, category, priority, status,
+--              created_at, resolved_at, ticket_text
+-- Table columns: ticket_id, customer_id, order_id, ticket_text, category,
+--                priority, status, created_at, resolved_at
+-- Fix: ticket_text is $9 in CSV but position 4 in table;
+--      resolved_at uses NULLIF($8,'') to convert empty strings to NULL.
 COPY INTO SUPPORT_TICKETS
-    FROM @RETAILIQ_STG/support_tickets.csv
+    (ticket_id, customer_id, order_id, ticket_text, category,
+     priority, status, created_at, resolved_at)
+    FROM (
+        SELECT
+            t.$1,               -- ticket_id
+            t.$2,               -- customer_id
+            t.$3,               -- order_id
+            t.$9,               -- ticket_text  (last in CSV, position 4 in table)
+            t.$4,               -- category
+            t.$5,               -- priority
+            t.$6,               -- status
+            t.$7,               -- created_at
+            NULLIF(t.$8, '')    -- resolved_at  (empty string → NULL for open tickets)
+        FROM @RETAILIQ_STG/support_tickets.csv t
+    )
     FILE_FORMAT = (
         TYPE = 'CSV'
         FIELD_DELIMITER = ','
