@@ -1,0 +1,201 @@
+product_id,category,subcategory,product_name,brand,unit_cost,list_price,is_premium
+PRD_001,Sports & Outdoors,Swimming,Trekking Pole Pair Collapsible,ItalCore,25.18,37.52,False
+PRD_002,Home & Garden,Storage & Organisation,Stainless Steel Water Bottle 1L,VeloForce,22.26,33.12,False
+PRD_003,Sports & Outdoors,Fitness Equipment,Yoga Mat Non-Slip Eco Cork Pro,AquaFlow,136.57,238.16,False
+PRD_004,Home & Garden,Bedding & Bath,Mortar and Pestle Granite Mini,VeloForce,21.07,30.61,False
+PRD_005,Food & Beverage,Wine & Spirits,Cold Brew Coffee Concentrate Classic,BellaModa,99.79,201.0,True
+PRD_006,Sports & Outdoors,Swimming,Neoprene Dumbbell Pair 5kg v2,UrbanStyle,66.38,115.87,False
+PRD_007,Electronics,Wearables,Noise Cancelling Headphones Pro,PrimaCasa,372.26,640.38,False
+PRD_008,Electronics,Laptops,USB-C Hub 7-in-1 Lite,EcoRoots,282.05,410.69,False
+PRD_009,Electronics,Laptops,Desktop Microphone Studio v2,UrbanStyle,441.01,630.71,False
+PRD_010,Clothing & Apparel,Sportswear,Casual Denim Jacket Pro,NordLight,399.76,960.07,True
+PRD_011,Clothing & Apparel,Accessories,Patterned Silk Scarf,NordLight,62.39,92.68,False
+PRD_012,Clothing & Apparel,Accessories,Baseball Cap Embroidered Lite,DolceVita,8.24,12.82,False
+PRD_013,Home & Garden,Storage & Organisation,Ceramic Planter Set 3-Piece Lite,PrimaCasa,178.99,392.35,True
+PRD_014,Clothing & Apparel,Men's,Kids Dinosaur Print Hoodie,UrbanStyle,72.87,117.82,False
+PRD_015,Clothing & Apparel,Footwear,Waterproof Trail Running Shoes Plus,UrbanStyle,61.4,108.54,False
+PRD_016,Clothing & Apparel,Footwear,Dance Shoes Suede Sole v2,LunaFit,16.97,25.02,False
+PRD_017,Electronics,Cameras,Multi-Port Fast Charger 65W Pro,ItalCore,140.55,203.51,False
+PRD_018,Home & Garden,Storage & Organisation,Stackable Kitchen Organiser Elite,TuscanyHome,7.98,11.43,False
+PRD_019,Electronics,Audio,Webcam HD 1080p Lite,CraftBrew,126.0,212.5,False
+PRD_020,Sports & Outdoors,Outdoor Adventure,Trekking Pole Pair Collapsible v2,TechNova,103.38,157.14,False
+PRD_021,Home & Garden,Bedding & Bath,Glass Meal Prep Containers 5-Pack v2,HighTrail,51.59,83.84,False
+PRD_022,Electronics,Laptops,Mini Projector Portable v2,StudioVerde,267.77,389.07,False
+PRD_023,Electronics,Laptops,Mechanical Pencil Digital Lite,JoviStyle,203.68,298.0,False
+PRD_024,Home & Garden,Storage & Organisation,Succulent Grow Kit Complete v2,StudioVerde,5.59,9.65,False
+PRD_025,Food & Beverage,Snacks & Confectionery,Dried Porcini Mushrooms 50g Plus,AquaFlow,12.79,22.46,False
+PRD_026,Food & Beverage,Organic & Health,Gourmet Truffle Salt 100g Lite,GustoBono,25.38,42.82,False
+PRD_027,Home & Garden,Bedding & Bath,Bamboo Cutting Board Set v2,KombuLife,23.83,42.02,False
+PRD_028,Electronics,Wearables,External SSD 1TB Plus,KombuLife,419.79,595.11,False
+PRD_029,Clothing & Apparel,Kids',Genuine Leather Wallet Slim,SportPeak,26.1,41.15,False
+PRD_030,Electronics,Smartphones,Mechanical Gaming Keyboard,QuantumFit,474.17,794.9,False
+PRD_031,Home & Garden,Garden Tools,Scented Soy Candle Vanilla Cedar,SoloPro,48.69,71.05,False
+PRD_032,Food & Beverage,Organic & Health,Craft Ginger Beer 4-Pack,StudioVerde,36.26,62.31,False
+PRD_033,Clothing & Apparel,Kids',Floral Wrap Dress Elite,OrthoFlex,31.53,47.29,False
+PRD_034,Electronics,Gaming,Gaming Controller Wireless Plus,TuscanyHome,1078.34,2311.77,True
+PRD_035,Clothing & Apparel,Women's,Canvas Tote Bag Everyday Classic,TechNova,104.84,187.71,False
+PRD_036,Clothing & Apparel,Women's,Recycled Fabric Backpack Pro,AquaFlow,310.43,651.69,True
+PRD_037,Food & Beverage,Snacks & Confectionery,Craft Ginger Beer 4-Pack,RomaClassic,32.13,46.37,False
+PRD_038,Food & Beverage,Wine & Spirits,Oat Milk Barista Edition 1L Elite,SoloPro,11.23,19.39,False
+PRD_039,Home & Garden,Decor,Stainless Pruning Shears Pro Elite,AquaFlow,21.72,36.14,False
+PRD_040,Clothing & Apparel,Men's,Platform Sandals Summer Classic,LunaFit,116.29,175.79,False
+PRD_041,Electronics,Cameras,Smart Fitness Tracker Lite,NordLight,713.03,1756.58,True
+PRD_042,Food & Beverage,Gourmet,Cold Brew Coffee Concentrate Classic,BellaModa,116.07,239.02,True
+PRD_043,Home & Garden,Garden Tools,Glass Meal Prep Containers 5-Pack Classic,StudioVerde,37.73,67.68,False
+PRD_044,Food & Beverage,Gourmet,Kombucha Ginger Lemon 330ml,GustoBono,10.03,14.22,False
+PRD_045,Home & Garden,Storage & Organisation,Beeswax Wrap Reusable 3-Pack Pro,BellaModa,184.24,454.0,True
+PRD_046,Clothing & Apparel,Accessories,Girls Tutu Skirt Rainbow Elite,LunaFit,15.84,26.38,False
+PRD_047,Clothing & Apparel,Men's,Gym Shorts Quick-Dry Classic,AlpinaGear,88.61,134.7,False
+PRD_048,Clothing & Apparel,Accessories,Wide-Brim Sun Hat Classic,LunaFit,86.09,139.62,False
+PRD_049,Electronics,Wearables,Gaming Controller Wireless Lite,CraftBrew,348.34,613.47,False
+PRD_050,Electronics,Gaming,Smart Home Hub Classic,PureBlend,1025.41,2135.24,True
+PRD_051,Electronics,Gaming,Air Quality Monitor Smart Mini,LunaFit,786.99,1647.45,True
+PRD_052,Food & Beverage,Snacks & Confectionery,Cacao Nibs Raw Organic 200g Plus,LunaFit,21.91,37.63,False
+PRD_053,Clothing & Apparel,Men's,Hiking Boots Gore-Tex Elite,GreenLeaf,39.78,66.26,False
+PRD_054,Clothing & Apparel,Women's,Wide-Brim Sun Hat Plus,TechNova,83.35,124.18,False
+PRD_055,Sports & Outdoors,Fitness Equipment,Tennis Overgrip Pack of 3 v2,EcoRoots,42.77,68.01,False
+PRD_056,Electronics,Wearables,Smart Bulb RGB Dimmable Classic,FioreDesign,446.48,727.88,False
+PRD_057,Clothing & Apparel,Accessories,Classic Slim Fit Chinos v2,OrthoFlex,35.33,58.73,False
+PRD_058,Home & Garden,Bedding & Bath,Herb Garden Seed Kit 8 Varieties Mini,UrbanStyle,21.41,36.86,False
+PRD_059,Electronics,Gaming,Portable Translator Device Plus,PureBlend,147.12,255.89,False
+PRD_060,Electronics,Wearables,Dash Camera 4K Dual Lens Elite,OrthoFlex,343.76,617.1,False
+PRD_061,Clothing & Apparel,Accessories,Platform Sandals Summer Classic,QuantumFit,76.62,129.31,False
+PRD_062,Electronics,Gaming,Foldable Keyboard Bluetooth Mini,AquaFlow,618.21,1233.63,True
+PRD_063,Sports & Outdoors,Outdoor Adventure,Water Polo Ball Size 4 Mini,KombuLife,343.95,710.73,True
+PRD_064,Home & Garden,Decor,Succulent Grow Kit Complete Pro,AquaFlow,25.59,36.62,False
+PRD_065,Food & Beverage,Organic & Health,Artisan Dark Chocolate 85% Cacao Plus,VeloForce,14.83,23.97,False
+PRD_066,Home & Garden,Bedding & Bath,Stainless Steel Water Bottle 1L Classic,DolceVita,57.05,95.99,False
+PRD_067,Home & Garden,Garden Tools,Ceramic Planter Set 3-Piece Classic,CraftBrew,45.7,71.58,False
+PRD_068,Electronics,Cameras,Screen Cleaning Kit Pro Classic,FioreDesign,763.28,1768.76,True
+PRD_069,Home & Garden,Kitchen,Stainless Pruning Shears Pro Classic,HighTrail,237.98,494.8,True
+PRD_070,Clothing & Apparel,Sportswear,Silk Blouse Elegant Mini,VeloForce,90.28,155.28,False
+PRD_071,Home & Garden,Garden Tools,Vertical Garden Wall Planter Classic,NaturaPura,37.69,53.2,False
+PRD_072,Home & Garden,Decor,Wicker Storage Basket Large,TuscanyHome,68.04,120.28,False
+PRD_073,Clothing & Apparel,Accessories,Casual Denim Jacket Classic,CasaVerde,74.29,123.71,False
+PRD_074,Electronics,Cameras,VR Headset Standalone Elite,PrimaCasa,247.0,350.77,False
+PRD_075,Electronics,Wearables,VR Headset Standalone Lite,OrthoFlex,183.62,312.98,False
+PRD_076,Clothing & Apparel,Accessories,Relaxed Linen Shirt,BellaModa,36.25,51.94,False
+PRD_077,Home & Garden,Decor,Under-Bed Storage Boxes 2-Pack,OrthoFlex,53.76,92.06,False
+PRD_078,Home & Garden,Kitchen,Cast Iron Skillet 26cm Plus,VeloForce,76.22,112.79,False
+PRD_079,Electronics,Laptops,Smart Home Hub Mini,MilanEdge,252.57,365.15,False
+PRD_080,Clothing & Apparel,Kids',Dance Shoes Suede Sole v2,OrthoFlex,93.89,137.75,False
+PRD_081,Clothing & Apparel,Women's,Relaxed Linen Shirt Lite,ItalCore,116.05,167.49,False
+PRD_082,Electronics,Tablets,Smart Bulb RGB Dimmable Pro,GreenLeaf,456.77,708.05,False
+PRD_083,Electronics,Gaming,Noise Cancelling Headphones Lite,RomaClassic,875.15,1992.14,True
+PRD_084,Clothing & Apparel,Sportswear,Formal Oxford Shoes Classic,BellaModa,264.14,521.05,True
+PRD_085,Sports & Outdoors,Team Sports,Headlamp LED 350 Lumens Elite,TechNova,199.93,424.32,True
+PRD_086,Clothing & Apparel,Accessories,School Uniform Bundle Mini,MilanEdge,339.59,666.72,True
+PRD_087,Clothing & Apparel,Women's,Compression Running Socks Mini,EcoRoots,56.77,96.14,False
+PRD_088,Food & Beverage,Wine & Spirits,Freeze-Dried Fruit Mix 200g Pro,QuantumFit,33.55,54.92,False
+PRD_089,Clothing & Apparel,Men's,Baseball Cap Embroidered Classic,AlpinaGear,39.24,62.01,False
+PRD_090,Sports & Outdoors,Fitness Equipment,Sleeping Bag -10°C Mummy Pro,BellaModa,223.01,467.21,True
+PRD_091,Sports & Outdoors,Cycling,Swimming Goggles Anti-Fog UV Lite,HighTrail,56.33,98.7,False
+PRD_092,Clothing & Apparel,Men's,Tailored Blazer Modern Fit Classic,FioreDesign,65.86,97.24,False
+PRD_093,Clothing & Apparel,Footwear,Minimalist Leather Sneakers Mini,PureBlend,317.78,735.46,True
+PRD_094,Clothing & Apparel,Men's,Tailored Blazer Modern Fit Lite,LunaFit,18.42,27.42,False
+PRD_095,Clothing & Apparel,Footwear,Boys Cargo Trousers Fleece Classic,NaturaPura,49.33,79.98,False
+PRD_096,Electronics,Gaming,"Curved Gaming Monitor 27"" Lite",AquaFlow,185.47,311.8,False
+PRD_097,Food & Beverage,Snacks & Confectionery,Cold Brew Coffee Concentrate Plus,PrimaCasa,7.46,11.02,False
+PRD_098,Clothing & Apparel,Women's,Rain Boots Rubber Printed Lite,SportPeak,311.13,642.76,True
+PRD_099,Electronics,Cameras,USB-C Hub 7-in-1 Lite,TechNova,121.24,180.77,False
+PRD_100,Clothing & Apparel,Sportswear,Merino Wool Sweater Lite,MilanEdge,67.82,102.39,False
+PRD_101,Sports & Outdoors,Outdoor Adventure,Jump Rope Weighted Professional,ItalCore,98.58,167.7,False
+PRD_102,Electronics,Audio,USB-C Hub 7-in-1,AquaFlow,250.62,395.02,False
+PRD_103,Electronics,Cameras,Retro Gaming Console Mini Mini,GreenLeaf,254.53,440.04,False
+PRD_104,Clothing & Apparel,Footwear,Sustainable Bamboo Socks Set Lite,GreenLeaf,274.01,529.43,True
+PRD_105,Sports & Outdoors,Outdoor Adventure,Cycling Gloves Touchscreen Pro,OrthoFlex,91.46,215.72,True
+PRD_106,Electronics,Gaming,Smart Speaker Voice Control Classic,SoloPro,208.78,368.16,False
+PRD_107,Food & Beverage,Gourmet,Dried Porcini Mushrooms 50g v2,OrthoFlex,80.21,181.74,True
+PRD_108,Home & Garden,Decor,Stainless Steel Water Bottle 1L Plus,VeloForce,51.91,78.17,False
+PRD_109,Electronics,Laptops,Smart Doorbell Camera Mini,MilanEdge,289.44,423.34,False
+PRD_110,Food & Beverage,Gourmet,Organic Quinoa 1kg Lite,MilanEdge,20.39,28.81,False
+PRD_111,Clothing & Apparel,Accessories,Thermal Underwear Set Pro,DolceVita,15.97,23.85,False
+PRD_112,Food & Beverage,Coffee & Tea,Artisan Coffee Capsules 20-Pack Lite,QuantumFit,23.15,38.41,False
+PRD_113,Food & Beverage,Snacks & Confectionery,Organic Quinoa 1kg Lite,EcoRoots,5.64,8.27,False
+PRD_114,Clothing & Apparel,Men's,Patterned Silk Scarf Lite,GustoBono,60.49,92.04,False
+PRD_115,Electronics,Gaming,Wireless Earbuds Ultra Classic,NaturaPura,262.08,375.34,False
+PRD_116,Home & Garden,Garden Tools,LED Fairy Lights Warm White 10m,OrthoFlex,50.28,70.91,False
+PRD_117,Clothing & Apparel,Sportswear,Canvas Tote Bag Everyday Mini,GustoBono,100.0,163.05,False
+PRD_118,Electronics,Tablets,Car Phone Mount Magnetic Classic,KombuLife,237.85,359.45,False
+PRD_119,Electronics,Cameras,Mini Projector Portable Classic,AlpinaGear,666.31,1302.47,True
+PRD_120,Food & Beverage,Organic & Health,Freeze-Dried Fruit Mix 200g Classic,MilanEdge,85.36,206.11,True
+PRD_121,Food & Beverage,Wine & Spirits,Elderflower Cordial 500ml,EcoRoots,45.26,111.66,True
+PRD_122,Electronics,Smartphones,Anti-Blue Light Glasses Gaming Classic,RomaClassic,480.24,1005.61,True
+PRD_123,Clothing & Apparel,Footwear,Lightweight Slip-On Loafers Mini,DolceVita,340.48,647.15,True
+PRD_124,Electronics,Smartphones,Screen Cleaning Kit Pro Mini,KombuLife,118.16,182.52,False
+PRD_125,Food & Beverage,Wine & Spirits,Superfood Granola Blueberry Plus,TuscanyHome,94.8,191.7,True
+PRD_126,Electronics,Audio,Smart Fitness Tracker,KombuLife,235.91,396.16,False
+PRD_127,Food & Beverage,Gourmet,Organic Quinoa 1kg,HighTrail,32.57,54.85,False
+PRD_128,Clothing & Apparel,Accessories,High-Waist Yoga Pants Mini,SportPeak,91.69,228.8,True
+PRD_129,Sports & Outdoors,Outdoor Adventure,Headlamp LED 350 Lumens Lite,DolceVita,78.77,132.86,False
+PRD_130,Electronics,Cameras,Portable Translator Device Plus,CraftBrew,256.77,407.98,False
+PRD_131,Clothing & Apparel,Women's,Oversized Knit Jumper v2,AquaFlow,373.44,823.41,True
+PRD_132,Electronics,Cameras,RGB LED Light Strip 5m Lite,QuantumFit,401.3,628.43,False
+PRD_133,Sports & Outdoors,Fitness Equipment,Road Bike Helmet MIPS Certified Mini,RomaClassic,48.16,73.18,False
+PRD_134,Home & Garden,Decor,Vertical Garden Wall Planter Classic,EcoRoots,38.49,61.34,False
+PRD_135,Clothing & Apparel,Kids',Tailored Blazer Modern Fit Classic,VeloForce,105.4,188.91,False
+PRD_136,Food & Beverage,Wine & Spirits,Pesto Artigianale Classico 180g Classic,CraftBrew,4.61,7.83,False
+PRD_137,Home & Garden,Decor,Memory Foam Pillow Contour Elite,RomaClassic,42.15,59.63,False
+PRD_138,Food & Beverage,Coffee & Tea,Vegan Protein Shake Chocolate Mini,TechNova,106.79,231.11,True
+PRD_139,Clothing & Apparel,Sportswear,Sustainable Bamboo Socks Set v2,FioreDesign,24.15,42.22,False
+PRD_140,Electronics,Cameras,Handheld Game Console Retro Classic,KombuLife,485.53,745.49,False
+PRD_141,Electronics,Smartphones,Mechanical Pencil Digital Classic,AlpinaGear,430.33,749.18,False
+PRD_142,Home & Garden,Bedding & Bath,Stainless Steel Water Bottle 1L Pro,KombuLife,70.43,99.61,False
+PRD_143,Sports & Outdoors,Cycling,Waterproof Dry Bag 20L v2,OrthoFlex,149.63,254.18,False
+PRD_144,Food & Beverage,Coffee & Tea,Green Smoothie Powder Blend,UrbanStyle,19.42,32.58,False
+PRD_145,Clothing & Apparel,Kids',School Uniform Bundle Classic,CasaVerde,97.17,147.44,False
+PRD_146,Clothing & Apparel,Women's,Canvas Tote Bag Everyday Plus,NordLight,67.49,109.76,False
+PRD_147,Food & Beverage,Coffee & Tea,Sea Salt Caramel Popcorn 150g Pro,FioreDesign,25.55,39.68,False
+PRD_148,Home & Garden,Storage & Organisation,Indoor Plant Pot Terracotta Mini,AquaFlow,15.73,24.92,False
+PRD_149,Home & Garden,Kitchen,Succulent Grow Kit Complete Plus,GreenLeaf,72.42,114.87,False
+PRD_150,Home & Garden,Bedding & Bath,Succulent Grow Kit Complete Classic,MilanEdge,75.89,136.23,False
+PRD_151,Food & Beverage,Organic & Health,Sparkling Water Flavoured 6-Pack Mini,SportPeak,62.97,131.06,True
+PRD_152,Electronics,Laptops,True Wireless Earphones Lite,TechNova,209.24,322.98,False
+PRD_153,Electronics,Cameras,Multi-Port Fast Charger 65W,TuscanyHome,339.37,512.38,False
+PRD_154,Home & Garden,Storage & Organisation,Digital Kitchen Scale 5kg Lite,OrthoFlex,60.89,105.53,False
+PRD_155,Food & Beverage,Snacks & Confectionery,Specialty Balsamic Vinegar Aged Pro,JoviStyle,25.46,39.23,False
+PRD_156,Electronics,Audio,Digital Photo Frame WiFi Plus,KombuLife,348.55,588.48,False
+PRD_157,Electronics,Smartphones,Smart Speaker Voice Control Mini,UrbanStyle,454.6,753.97,False
+PRD_158,Food & Beverage,Gourmet,Artisan Coffee Capsules 20-Pack Lite,AlpinaGear,53.31,105.49,True
+PRD_159,Electronics,Tablets,Mechanical Pencil Digital Elite,GustoBono,225.29,333.5,False
+PRD_160,Electronics,Gaming,Digital Drawing Tablet Mini,PureBlend,1109.16,2660.08,True
+PRD_161,Clothing & Apparel,Kids',High-Waist Yoga Pants Mini,GreenLeaf,91.61,140.67,False
+PRD_162,Food & Beverage,Snacks & Confectionery,Sea Salt Caramel Popcorn 150g Classic,RomaClassic,30.9,46.05,False
+PRD_163,Food & Beverage,Gourmet,Single Origin Espresso Beans 500g Lite,HighTrail,16.53,28.37,False
+PRD_164,Electronics,Smartphones,Neckband Sports Earphones Lite,ItalCore,243.75,406.85,False
+PRD_165,Food & Beverage,Wine & Spirits,Cold Brew Coffee Concentrate Pro,FioreDesign,33.43,59.38,False
+PRD_166,Electronics,Smartphones,Laptop Stand Adjustable Pro,KombuLife,321.19,570.84,False
+PRD_167,Clothing & Apparel,Men's,Gym Shorts Quick-Dry Classic,SportPeak,79.17,125.54,False
+PRD_168,Food & Beverage,Snacks & Confectionery,Collagen Protein Powder Vanilla v2,SportPeak,4.68,6.62,False
+PRD_169,Food & Beverage,Snacks & Confectionery,Oat Milk Barista Edition 1L Elite,LunaFit,35.83,52.11,False
+PRD_170,Home & Garden,Storage & Organisation,Scented Soy Candle Vanilla Cedar Classic,KombuLife,36.43,61.82,False
+PRD_171,Food & Beverage,Coffee & Tea,Raw Wildflower Honey 400g,MilanEdge,33.85,55.73,False
+PRD_172,Food & Beverage,Organic & Health,Extra Virgin Olive Oil DOP 500ml Elite,SportPeak,11.04,17.42,False
+PRD_173,Electronics,Tablets,Smart Scale Body Composition Elite,UrbanStyle,535.7,1307.65,True
+PRD_174,Clothing & Apparel,Accessories,Baseball Cap Embroidered v2,LunaFit,38.9,69.53,False
+PRD_175,Clothing & Apparel,Women's,Relaxed Linen Shirt,PureBlend,278.18,628.21,True
+PRD_176,Electronics,Audio,Multi-Port Fast Charger 65W Pro,GreenLeaf,144.48,209.55,False
+PRD_177,Sports & Outdoors,Team Sports,Tennis Overgrip Pack of 3 Pro,AlpinaGear,37.42,55.62,False
+PRD_178,Clothing & Apparel,Women's,Compression Running Socks Plus,CasaVerde,96.33,157.83,False
+PRD_179,Home & Garden,Storage & Organisation,Stackable Kitchen Organiser,CasaVerde,23.8,34.98,False
+PRD_180,Food & Beverage,Coffee & Tea,Almond Butter Crunchy 340g Elite,TechNova,52.62,124.87,True
+PRD_181,Home & Garden,Decor,Watering Can Copper Finish 5L v2,NaturaPura,95.73,189.17,True
+PRD_182,Clothing & Apparel,Men's,Platform Sandals Summer v2,EcoRoots,61.34,104.97,False
+PRD_183,Food & Beverage,Gourmet,Dried Porcini Mushrooms 50g Lite,EcoRoots,11.2,18.44,False
+PRD_184,Clothing & Apparel,Sportswear,Ankle Boots Chelsea Style Classic,DolceVita,387.77,750.91,True
+PRD_185,Electronics,Tablets,Air Quality Monitor Smart v2,StudioVerde,263.36,612.95,True
+PRD_186,Food & Beverage,Coffee & Tea,Artisan Dark Chocolate 85% Cacao Lite,JoviStyle,14.92,21.77,False
+PRD_187,Clothing & Apparel,Sportswear,Leather Gloves Driving Style Lite,EcoRoots,259.02,602.82,True
+PRD_188,Electronics,Gaming,Handheld Game Console Retro v2,RomaClassic,314.55,452.85,False
+PRD_189,Food & Beverage,Gourmet,Oat Milk Barista Edition 1L Pro,DolceVita,29.67,44.09,False
+PRD_190,Electronics,Audio,Tablet Stand Adjustable 360 v2,AlpinaGear,1018.79,2179.43,True
+PRD_191,Sports & Outdoors,Swimming,Foam Roller Deep Tissue Massage Mini,GreenLeaf,159.38,327.2,True
+PRD_192,Sports & Outdoors,Fitness Equipment,Jump Rope Weighted Professional Elite,PureBlend,126.11,181.26,False
+PRD_193,Sports & Outdoors,Outdoor Adventure,Multi-Tool Pocket Knife 14-in-1 Elite,LunaFit,87.0,142.21,False
+PRD_194,Clothing & Apparel,Men's,Genuine Leather Wallet Slim,SoloPro,54.01,94.49,False
+PRD_195,Electronics,Gaming,RGB LED Light Strip 5m Pro,CasaVerde,176.85,254.92,False
+PRD_196,Sports & Outdoors,Swimming,Tennis Overgrip Pack of 3 Elite,SportPeak,39.84,57.5,False
+PRD_197,Clothing & Apparel,Kids',Memory Foam Insoles,JoviStyle,72.3,124.56,False
+PRD_198,Sports & Outdoors,Cycling,Water Polo Ball Size 4 Lite,TuscanyHome,12.11,18.28,False
+PRD_199,Sports & Outdoors,Cycling,Foam Roller Deep Tissue Massage Classic,GreenLeaf,57.85,85.19,False
+PRD_200,Home & Garden,Decor,Stainless Steel Water Bottle 1L Pro,CraftBrew,195.6,485.69,True

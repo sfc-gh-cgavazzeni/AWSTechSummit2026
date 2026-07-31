@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="snowflake-source" content="cortex-agent-authored" />
+  <title>Enterprise AI Agents: Snowflake Cortex × AWS Bedrock AgentCore</title>
+  <script type="application/json" id="snowflake-report-metadata">
+  {
+    "generated": "2026-07-31",
+    "intent": "Workshop slide deck for AWS Tech Summit 2026 — Snowflake Cortex + AWS Bedrock AgentCore integration",
+    "sections": [
+      { "id": "slides", "title": "Workshop slides", "dataSources": [], "producerNotes": "Self-contained slide deck, no external data sources." }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      --sf-blue: #29B5E8;
+      --sf-dark: #11567f;
+      --sf-navy: #0a3550;
+      --aws-orange: #FF9900;
+      --aws-dark: #232f3e;
+      --white: #ffffff;
+      --light-gray: #f0f4f8;
+      --mid-gray: #8898aa;
+      --text-dark: #1a2e3b;
+      --green: #00b894;
+      --purple: #6c5ce7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+      background: #0a0e1a;
+      color: var(--white);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ── SLIDE CONTAINER ── */
+    #deck { position: relative; width: 100vw; height: 100vh; }
+
+    .slide {
+      position: absolute; inset: 0;
+      display: none;
+      flex-direction: column;
+      padding: 56px 72px;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .slide.active { display: flex; opacity: 1; }
+
+    /* ── SLIDE THEMES ── */
+    .slide-cover {
+      background: linear-gradient(135deg, var(--sf-navy) 0%, #0f2a3d 50%, var(--aws-dark) 100%);
+      justify-content: center; align-items: center; text-align: center;
+    }
+    .slide-section {
+      background: linear-gradient(135deg, var(--sf-dark) 0%, var(--sf-navy) 100%);
+    }
+    .slide-content {
+      background: linear-gradient(160deg, #0d1b2a 0%, #0f2a3d 100%);
+    }
+    .slide-demo {
+      background: linear-gradient(160deg, #0a1a0a 0%, #0f2a1a 100%);
+    }
+    .slide-aws {
+      background: linear-gradient(160deg, #1a1206 0%, #2a1f0a 100%);
+    }
+    .slide-end {
+      background: linear-gradient(135deg, var(--sf-navy) 0%, var(--aws-dark) 100%);
+      justify-content: center; align-items: center; text-align: center;
+    }
+
+    /* ── TYPOGRAPHY ── */
+    .cover-eyebrow {
+      font-size: 0.9rem; font-weight: 600; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--sf-blue); margin-bottom: 20px;
+    }
+    .cover-title {
+      font-size: 3rem; font-weight: 800; line-height: 1.1;
+      color: var(--white); margin-bottom: 16px;
+    }
+    .cover-subtitle {
+      font-size: 1.25rem; color: rgba(255,255,255,0.65);
+      margin-bottom: 40px;
+    }
+    .cover-meta {
+      font-size: 0.9rem; color: rgba(255,255,255,0.45);
+      display: flex; gap: 32px; justify-content: center;
+    }
+    .cover-meta span { display: flex; align-items: center; gap: 6px; }
+
+    .slide-header {
+      margin-bottom: 36px;
+    }
+    .slide-tag {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--sf-blue);
+      margin-bottom: 8px; display: block;
+    }
+    h2 { font-size: 2rem; font-weight: 700; color: var(--white); line-height: 1.2; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: var(--sf-blue); margin-bottom: 10px; }
+
+    /* ── LAYOUT HELPERS ── */
+    .cols { display: flex; gap: 40px; flex: 1; }
+    .col { flex: 1; }
+    .col-40 { flex: 0 0 40%; }
+    .col-60 { flex: 0 0 58%; }
+
+    /* ── CARDS ── */
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+    .card-blue { border-left: 3px solid var(--sf-blue); }
+    .card-orange { border-left: 3px solid var(--aws-orange); }
+    .card-green { border-left: 3px solid var(--green); }
+    .card p, .card li { font-size: 0.9rem; color: rgba(255,255,255,0.75); line-height: 1.5; }
+    .card ul { padding-left: 16px; }
+
+    /* ── PILL BADGES ── */
+    .pill {
+      display: inline-block; padding: 3px 12px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .pill-blue { background: rgba(41,181,232,0.15); color: var(--sf-blue); border: 1px solid rgba(41,181,232,0.3); }
+    .pill-orange { background: rgba(255,153,0,0.15); color: var(--aws-orange); border: 1px solid rgba(255,153,0,0.3); }
+    .pill-green { background: rgba(0,184,148,0.15); color: var(--green); border: 1px solid rgba(0,184,148,0.3); }
+
+    /* ── AGENDA TABLE ── */
+    .agenda-table { width: 100%; border-collapse: collapse; }
+    .agenda-table th {
+      text-align: left; font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--sf-blue); padding: 10px 14px;
+      border-bottom: 1px solid rgba(41,181,232,0.3);
+    }
+    .agenda-table td {
+      padding: 11px 14px; font-size: 0.875rem; color: rgba(255,255,255,0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.07); vertical-align: middle;
+    }
+    .agenda-table tr:last-child td { border-bottom: none; }
+    .time-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700;
+      background: rgba(41,181,232,0.12); color: var(--sf-blue);
+      border: 1px solid rgba(41,181,232,0.25);
+    }
+
+    /* ── ARCHITECTURE SVG ── */
+    .arch-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px; padding: 14px 18px;
+      margin-bottom: 10px;
+    }
+    .arch-box.aws { border-color: rgba(255,153,0,0.35); background: rgba(255,153,0,0.05); }
+    .arch-box.sf  { border-color: rgba(41,181,232,0.35); background: rgba(41,181,232,0.05); }
+    .arch-box.mcp { border-color: rgba(108,92,231,0.45); background: rgba(108,92,231,0.07); }
+    .arch-title {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+    .arch-title.aws { color: var(--aws-orange); }
+    .arch-title.sf  { color: var(--sf-blue); }
+    .arch-title.mcp { color: #a29bfe; }
+    .arch-items { display: flex; gap: 8px; flex-wrap: wrap; }
+    .arch-item {
+      padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    }
+    .arch-item.sf { background: rgba(41,181,232,0.12); border-color: rgba(41,181,232,0.25); color: #7dd3fc; }
+    .arch-item.aws { background: rgba(255,153,0,0.12); border-color: rgba(255,153,0,0.25); color: #fcd34d; }
+    .arch-arrow {
+      text-align: center; font-size: 1.2rem; color: #a29bfe; margin: 4px 0;
+    }
+    .arch-label {
+      font-size: 0.65rem; color: #a29bfe; text-transform: uppercase;
+      letter-spacing: 0.08em; text-align: center;
+    }
+
+    /* ── CODE BLOCK ── */
+    pre {
+      background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 14px 18px; font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.78rem; line-height: 1.6; color: #a8d8ea; overflow-x: auto;
+      margin-bottom: 12px;
+    }
+    .kw { color: #ff7ab2; }
+    .str { color: #fad07a; }
+    .cmt { color: #6e7681; font-style: italic; }
+    .fn  { color: #67e8f9; }
+    .num { color: #a8d8ea; }
+
+    /* ── BULLET LISTS ── */
+    .bullet-list { list-style: none; padding: 0; }
+    .bullet-list li {
+      font-size: 0.92rem; color: rgba(255,255,255,0.8); padding: 8px 0 8px 28px;
+      position: relative; line-height: 1.5; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .bullet-list li:last-child { border-bottom: none; }
+    .bullet-list li::before {
+      content: "▸"; position: absolute; left: 0;
+      color: var(--sf-blue); font-size: 0.8rem;
+    }
+    .bullet-list li strong { color: var(--white); }
+
+    /* ── COMPARISON TABLE ── */
+    .cmp-table { width: 100%; border-collapse: collapse; }
+    .cmp-table th {
+      padding: 10px 14px; font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.08em; font-weight: 600; text-align: left;
+    }
+    .cmp-table th:first-child { color: var(--mid-gray); }
+    .cmp-table th.sf { color: var(--sf-blue); }
+    .cmp-table th.aws { color: var(--aws-orange); }
+    .cmp-table td {
+      padding: 10px 14px; font-size: 0.85rem; color: rgba(255,255,255,0.75);
+      border-bottom: 1px solid rgba(255,255,255,0.07); vertical-align: top;
+    }
+    .cmp-table td:first-child { color: var(--mid-gray); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .cmp-table tr:last-child td { border-bottom: none; }
+
+    /* ── TALKING POINT ── */
+    .talking-point {
+      background: rgba(41,181,232,0.08); border: 1px solid rgba(41,181,232,0.2);
+      border-left: 3px solid var(--sf-blue);
+      border-radius: 8px; padding: 12px 16px;
+      margin-top: auto; /* push to bottom */
+    }
+    .talking-point p { font-size: 0.82rem; color: rgba(255,255,255,0.7); line-height: 1.5; font-style: italic; }
+    .talking-point strong { color: var(--sf-blue); font-style: normal; }
+
+    /* ── KPI STRIP ── */
+    .kpi-strip { display: flex; gap: 16px; margin-bottom: 28px; }
+    .kpi {
+      flex: 1; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+      padding: 16px; text-align: center;
+    }
+    .kpi-val { font-size: 1.8rem; font-weight: 800; color: var(--sf-blue); }
+    .kpi-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ── PROGRESS BAR ── */
+    #progress {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px; background: var(--sf-blue);
+      transition: width 0.35s ease; z-index: 100;
+    }
+
+    /* ── NAVIGATION ── */
+    #nav {
+      position: fixed; bottom: 20px; right: 28px;
+      display: flex; align-items: center; gap: 12px; z-index: 100;
+    }
+    .nav-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: var(--white); font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .nav-btn:hover { background: rgba(41,181,232,0.25); border-color: var(--sf-blue); }
+    #slide-counter { font-size: 0.75rem; color: rgba(255,255,255,0.35); min-width: 44px; text-align: center; }
+
+    /* ── LOGOS (SVG text) ── */
+    .logo-strip { display: flex; align-items: center; gap: 28px; margin-bottom: 40px; }
+    .logo-sf { font-size: 1.1rem; font-weight: 800; color: var(--sf-blue); letter-spacing: -0.02em; }
+    .logo-aws { font-size: 1.1rem; font-weight: 800; color: var(--aws-orange); }
+    .logo-sep { color: rgba(255,255,255,0.2); font-size: 1.4rem; }
+
+    /* ── NUMBER STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 10px; }
+    .step { display: flex; align-items: flex-start; gap: 14px; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(41,181,232,0.15); border: 1px solid var(--sf-blue);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: var(--sf-blue);
+    }
+    .step-body { flex: 1; }
+    .step-body p { font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.4; margin-top: 2px; }
+    .step-title { font-size: 0.9rem; font-weight: 600; color: var(--white); }
+
+    /* ── VQ DEMO ── */
+    .vq-before, .vq-after {
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+    }
+    .vq-before { background: rgba(255,100,100,0.07); border: 1px solid rgba(255,100,100,0.2); }
+    .vq-after  { background: rgba(0,184,148,0.07);   border: 1px solid rgba(0,184,148,0.2); }
+    .vq-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .vq-before .vq-label { color: #fc8585; }
+    .vq-after  .vq-label { color: var(--green); }
+    .vq-before code, .vq-after code { font-size: 0.78rem; font-family: "SF Mono", monospace; line-height: 1.5; color: rgba(255,255,255,0.8); }
+
+    /* ── SECURITY TABLE ── */
+    .sec-table { width: 100%; border-collapse: collapse; }
+    .sec-table td { padding: 10px 14px; font-size: 0.82rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sec-table td:first-child { color: var(--mid-gray); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; width: 22%; }
+    .sec-table td:nth-child(2) { color: rgba(255,100,100,0.9); width: 39%; }
+    .sec-table td:nth-child(3) { color: rgba(0,184,148,0.9); width: 39%; }
+    .sec-table tr:last-child td { border-bottom: none; }
+    .sec-table thead th {
+      padding: 8px 14px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+    .sec-table thead th:nth-child(2) { color: rgba(255,100,100,0.7); }
+    .sec-table thead th:nth-child(3) { color: rgba(0,184,148,0.7); }
+
+    /* ── RESOURCE LINKS ── */
+    .resource-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .resource-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 16px 18px;
+    }
+    .resource-card a {
+      color: var(--sf-blue); text-decoration: none; font-size: 0.85rem; font-weight: 600;
+      display: block; margin-bottom: 4px;
+    }
+    .resource-card a:hover { text-decoration: underline; }
+    .resource-card p { font-size: 0.78rem; color: rgba(255,255,255,0.45); }
+
+    /* ── WHAT YOU BUILT ── */
+    .built-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; flex: 1; align-content: start; }
+    .built-item {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 18px; text-align: center;
+    }
+    .built-icon { font-size: 2rem; margin-bottom: 10px; }
+    .built-name { font-size: 0.85rem; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+    .built-desc { font-size: 0.75rem; color: rgba(255,255,255,0.45); line-height: 1.4; }
+
+  </style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 1 — COVER -->
+  <div class="slide slide-cover active" id="s1">
+    <div class="logo-strip" style="justify-content:center;margin-bottom:32px;">
+      <span class="logo-sf">Snowflake</span>
+      <span class="logo-sep">×</span>
+      <span class="logo-aws">AWS</span>
+    </div>
+    <div class="cover-eyebrow">AWS Tech Summit 2026 · Hands-On Workshop</div>
+    <div class="cover-title">Enterprise AI Agents<br>Snowflake Cortex × AWS Bedrock AgentCore</div>
+    <div class="cover-subtitle">Build a production-grade agentic workflow that orchestrates structured analytics<br>and semantic search via the standards-based MCP protocol</div>
+    <div class="cover-meta">
+      <span>⏱ 2 hours</span>
+      <span>👥 Pair labs</span>
+      <span>🔧 Hands-on</span>
+      <span>🎯 60 AWS Solution Architects</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 2 — AGENDA -->
+  <div class="slide slide-content" id="s2">
+    <div class="slide-header">
+      <span class="slide-tag">Workshop Overview</span>
+      <h2>Agenda</h2>
+    </div>
+    <table class="agenda-table">
+      <thead><tr><th>#</th><th>Module</th><th>Duration</th><th>Key Output</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>Architecture overview &amp; environment setup</td><td><span class="time-badge">15 min</span></td><td>Snowflake environment ready</td></tr>
+        <tr><td>1</td><td>Load data &amp; explore the schema</td><td><span class="time-badge">10 min</span></td><td>RetailIQ dataset in Snowflake</td></tr>
+        <tr><td>2</td><td><strong>Semantic View: build &amp; tune</strong> ⭐</td><td><span class="time-badge">25 min</span></td><td>Tuned SV with verified queries</td></tr>
+        <tr><td>3</td><td>Cortex Search services</td><td><span class="time-badge">10 min</span></td><td>Reviews + tickets search indexes</td></tr>
+        <tr><td>4</td><td>Cortex Agent (native, in CoWork)</td><td><span class="time-badge">15 min</span></td><td>Cross-tool agent demo</td></tr>
+        <tr><td>5</td><td>Snowflake Managed MCP Server</td><td><span class="time-badge">10 min</span></td><td>MCP endpoint live</td></tr>
+        <tr><td>6</td><td>AWS Bedrock AgentCore setup</td><td><span class="time-badge">15 min</span></td><td>EC2 + Strands agent deployed</td></tr>
+        <tr><td>7</td><td>End-to-end multi-turn demo + production patterns</td><td><span class="time-badge">20 min</span></td><td>Full stack demo + takeaways</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 3 — THE PROBLEM -->
+  <div class="slide slide-content" id="s3">
+    <div class="slide-header">
+      <span class="slide-tag">Motivation</span>
+      <h2>The Problem We're Solving</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>What enterprises need</h3>
+        <ul class="bullet-list">
+          <li><strong>Analysts ask questions in natural language</strong> — "What's our return rate in the South?"</li>
+          <li><strong>Data is split across structured + unstructured</strong> — SQL tables and freetext reviews live in different systems</li>
+          <li><strong>Context must persist across turns</strong> — "Now focus on the bottom 3 regions" requires the agent to remember previous answers</li>
+          <li><strong>Governance can't be bypassed</strong> — the AI must see only what the user's role allows</li>
+          <li><strong>No new infrastructure to manage</strong> — no vector DB, no embedding pipeline, no model hosting</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>What we'll build today</h3>
+        <div class="card card-blue">
+          <p><strong>Snowflake side:</strong> Cortex Analyst (SQL from natural language over a tuned Semantic View) + Cortex Search (hybrid semantic search over text data) + Cortex Agent + Managed MCP Server</p>
+        </div>
+        <div class="card card-orange">
+          <p><strong>AWS side:</strong> Bedrock AgentCore Runtime (managed execution environment) + Memory (multi-turn context) + Strands agent (Python) connecting to Snowflake via MCP</p>
+        </div>
+        <div class="talking-point">
+          <p><strong>Key insight for SAs:</strong> "AgentCore solves the managed runtime and orchestration problem. Snowflake solves the governed data grounding problem. MCP is the open standard that eliminates any custom integration between them."</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 4 — ARCHITECTURE -->
+  <div class="slide slide-content" id="s4">
+    <div class="slide-header">
+      <span class="slide-tag">Architecture</span>
+      <h2>Full Stack Overview</h2>
+    </div>
+    <div class="cols" style="align-items:stretch;">
+      <div class="col-40">
+        <div class="arch-box aws">
+          <div class="arch-title aws">AWS Bedrock AgentCore</div>
+          <div class="arch-items">
+            <span class="arch-item aws">Strands Agent</span>
+            <span class="arch-item aws">AgentCore Runtime</span>
+            <span class="arch-item aws">Memory Store</span>
+            <span class="arch-item aws">Claude Sonnet 4.5</span>
+          </div>
+        </div>
+        <div class="arch-arrow">↕</div>
+        <div class="arch-label">MCP over HTTPS · PAT Bearer Auth</div>
+        <div class="arch-arrow">↕</div>
+        <div class="arch-box mcp">
+          <div class="arch-title mcp">Snowflake Managed MCP Server</div>
+          <div class="arch-items">
+            <span class="arch-item" style="color:#c4b5fd;">Standards-based endpoint</span>
+            <span class="arch-item" style="color:#c4b5fd;">Role-scoped tools</span>
+            <span class="arch-item" style="color:#c4b5fd;">PAT auth + audit</span>
+          </div>
+        </div>
+        <div class="arch-arrow">↕</div>
+        <div class="arch-box sf">
+          <div class="arch-title sf">Snowflake Cortex</div>
+          <div class="arch-items">
+            <span class="arch-item sf">Cortex Analyst</span>
+            <span class="arch-item sf">Cortex Search (×2)</span>
+            <span class="arch-item sf">Semantic View</span>
+            <span class="arch-item sf">Native Agent</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-60">
+        <h3>Component responsibilities</h3>
+        <div class="card card-orange" style="margin-bottom:10px;">
+          <p><strong>AgentCore Runtime:</strong> Managed Python execution, auto-scaling, session isolation, AgentCore Memory for multi-turn context persistence</p>
+        </div>
+        <div class="card" style="margin-bottom:10px;border-left:3px solid #a29bfe;">
+          <p><strong>MCP Server:</strong> Translates tool calls from any MCP client into Cortex API calls. Auth, rate limiting, and audit happen here. No custom SDK needed</p>
+        </div>
+        <div class="card card-blue">
+          <p><strong>Cortex Analyst:</strong> Takes a natural language question, uses the Semantic View to generate precise SQL, executes it, returns structured results<br><br>
+          <strong>Cortex Search:</strong> Hybrid full-text + vector search over unstructured data. No separate vector store to maintain</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 5 — CORTEX ANALYST -->
+  <div class="slide slide-content" id="s5">
+    <div class="slide-header">
+      <span class="slide-tag">Module 2 · Cortex Analyst</span>
+      <h2>From Natural Language to Correct SQL</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>How it works</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">User question</div>
+              <p>"What is our revenue by region year-to-date?"</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Semantic View lookup</div>
+              <p>Analyst reads the SV to understand: <em>revenue = SUM(total_amount) WHERE status='Completed'</em>, <em>region = customers.region</em></p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">SQL generation + execution</div>
+              <p>Generates precise JOIN + GROUP BY + filter, executes against Snowflake warehouse</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Structured response</div>
+              <p>Returns table + optional chart recommendation + explanation of the SQL</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <h3>Without vs with Semantic View</h3>
+        <div class="vq-before">
+          <div class="vq-label">Without Semantic View</div>
+          <code>-- LLM guesses schema...<br>SELECT store_id, SUM(amount)<br>FROM orders GROUP BY 1<br><br>-- Wrong: uses store instead of customer<br>-- region; omits Completed filter</code>
+        </div>
+        <div class="vq-after">
+          <div class="vq-label">With Semantic View + Verified Queries</div>
+          <code>SELECT c.region,<br>  SUM(o.total_amount) AS revenue<br>FROM orders o<br>JOIN customers c ON o.customer_id=c.customer_id<br>WHERE o.status = 'Completed'<br>  AND YEAR(o.order_date) = YEAR(CURRENT_DATE())<br>GROUP BY 1 ORDER BY 2 DESC</code>
+        </div>
+        <div class="talking-point">
+          <p><strong>Tuning tip:</strong> Verified Queries are the highest-ROI investment. 10 well-written VQs for your top KPIs will make Analyst answer those questions perfectly 100% of the time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 6 — SEMANTIC VIEW -->
+  <div class="slide slide-content" id="s6">
+    <div class="slide-header">
+      <span class="slide-tag">Module 2 · Deep Dive</span>
+      <h2>Semantic View: The Business Vocabulary Layer</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>What the RetailIQ SV defines</h3>
+        <div class="kpi-strip">
+          <div class="kpi"><div class="kpi-val">4</div><div class="kpi-label">Tables</div></div>
+          <div class="kpi"><div class="kpi-val">19</div><div class="kpi-label">Dimensions</div></div>
+          <div class="kpi"><div class="kpi-val">13</div><div class="kpi-label">Metrics</div></div>
+          <div class="kpi"><div class="kpi-val">10</div><div class="kpi-label">Verified Queries</div></div>
+        </div>
+        <h3 style="margin-bottom:8px;">Key metrics defined</h3>
+        <ul class="bullet-list">
+          <li><strong>total_revenue:</strong> SUM(total_amount) WHERE status='Completed' — synonyms: <em>revenue, fatturato, sales, gross sales</em></li>
+          <li><strong>average_order_value:</strong> total_revenue / completed_order_count — synonyms: <em>AOV, scontrino medio, basket size</em></li>
+          <li><strong>return_rate:</strong> returned orders / total orders — synonyms: <em>% returns, tasso resi</em></li>
+          <li><strong>gross_margin_pct:</strong> (revenue - cost) / revenue</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Tuning exercise: Verified Query</h3>
+        <pre><span class="cmt"># In retailiq_semantic_view.yaml</span>
+<span class="kw">verified_queries:</span>
+  - name: return_rate_by_category
+    question: <span class="str">"What is the return rate
+      by product category?"</span>
+    sql: <span class="str">|
+      SELECT p.category,
+        ROUND(100.0 * COUNT(CASE WHEN
+          o.return_flag THEN 1 END)
+          / NULLIF(COUNT(*),0), 2)
+          AS return_rate_pct
+      FROM orders o
+      JOIN products p
+        ON o.product_id = p.product_id
+      GROUP BY 1
+      ORDER BY 2 DESC</span></pre>
+        <div class="talking-point">
+          <p><strong>Workshop exercise:</strong> Ask Analyst this question before and after uploading the SV. Show the SQL diff. Then add your own VQ live using the UI editor.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 7 — CORTEX SEARCH -->
+  <div class="slide slide-content" id="s7">
+    <div class="slide-header">
+      <span class="slide-tag">Module 3 · Cortex Search</span>
+      <h2>Hybrid Semantic Search — No Vector DB Required</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>What we're searching</h3>
+        <div class="card card-blue">
+          <p><strong>RETAILIQ_REVIEWS_SEARCH</strong><br>15,000 customer reviews with product feedback, store experience notes, delivery comments. Multi-lingual context (Italian store names, English text).</p>
+        </div>
+        <div class="card card-blue">
+          <p><strong>RETAILIQ_TICKETS_SEARCH</strong><br>8,000 support tickets covering delivery issues, product quality, billing disputes, return requests.</p>
+        </div>
+        <h3 style="margin-top:16px;">How it differs from LIKE/ILIKE</h3>
+        <ul class="bullet-list">
+          <li><strong>Semantic:</strong> "package not received" finds "item still in transit", "shipment delayed"</li>
+          <li><strong>Intent-aware:</strong> "unhappy customer" finds all negative sentiment even without the word "unhappy"</li>
+          <li><strong>Hybrid:</strong> combines TF-IDF precision with embedding-based recall</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Creation (one statement)</h3>
+        <pre><span class="kw">CREATE OR REPLACE CORTEX SEARCH SERVICE</span>
+  RETAILIQ_REVIEWS_SEARCH
+<span class="kw">ON</span> review_text
+<span class="kw">ATTRIBUTES</span>
+  product_name, category, rating,
+  sentiment_label, store_region
+<span class="kw">WAREHOUSE</span> = RETAILIQ_WH
+<span class="kw">TARGET_LAG</span> = <span class="str">'5 MIN'</span>
+<span class="kw">AS</span> (
+  <span class="kw">SELECT</span> * <span class="kw">FROM</span> customer_reviews
+);</pre>
+        <h3>Test queries for the workshop</h3>
+        <ul class="bullet-list">
+          <li>"delivery problems southern Italy" → finds late packages in Sicilia/Campania</li>
+          <li>"customers unhappy electronics" → negative reviews without the word "unhappy"</li>
+          <li>"refund not processed" → billing tickets across categories</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 8 — CORTEX AGENT + COWORK -->
+  <div class="slide slide-demo" id="s8">
+    <div class="slide-header">
+      <span class="slide-tag">Module 4 · Native Agent</span>
+      <h2>Cortex Agent in CoWork — Cross-Tool Reasoning</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>The agent has 3 tools</h3>
+        <div class="card card-blue"><p><strong>retailiq_analyst</strong> — Cortex Analyst over RETAILIQ_SV. Use for: quantitative KPIs, trends, rankings, aggregations</p></div>
+        <div class="card card-blue"><p><strong>retailiq_reviews_search</strong> — Search over 15k customer reviews. Use for: sentiment, product feedback, store experience</p></div>
+        <div class="card card-blue"><p><strong>retailiq_tickets_search</strong> — Search over 8k support tickets. Use for: operational issues, complaint patterns</p></div>
+        <div class="talking-point" style="margin-top:16px;">
+          <p><strong>Show the reasoning trace in CoWork.</strong> The visible chain-of-thought is the "aha moment" — SAs understand the debugging value for production deployments immediately.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h3>Demo questions (run in order)</h3>
+        <div class="card" style="margin-bottom:10px;">
+          <p><span class="pill pill-blue">Analyst only</span><br>"What are our top 5 categories by revenue this quarter?"</p>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <p><span class="pill pill-blue">Search only</span><br>"What are customers saying about our electronics?"</p>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <p><span class="pill pill-green">Both tools — key demo</span><br>"Which product categories have the highest return rates, and what are customers saying about those returns?"</p>
+        </div>
+        <div class="card">
+          <p><span class="pill pill-green">Multi-source reasoning</span><br>"Compare revenue performance by region — and are there regions with more delivery complaints?"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 9 — MCP SERVER -->
+  <div class="slide slide-content" id="s9">
+    <div class="slide-header">
+      <span class="slide-tag">Module 5 · MCP Server</span>
+      <h2>Snowflake Managed MCP Server</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>What "Managed" means</h3>
+        <ul class="bullet-list">
+          <li><strong>No infrastructure:</strong> No separate server to deploy or scale. Snowflake operates it as a platform service</li>
+          <li><strong>Native auth:</strong> PAT tokens scoped to a specific role — not a generic API key</li>
+          <li><strong>Automatic audit:</strong> Every tool call appears in Snowflake QUERY_HISTORY with full attribution</li>
+          <li><strong>Any MCP client:</strong> Claude Desktop, VS Code, your own app, AgentCore — all work without any custom code</li>
+        </ul>
+        <h3 style="margin-top:20px;">Create the server</h3>
+        <pre><span class="kw">CREATE OR REPLACE MCP SERVER</span>
+  RETAILIQ_MCP_SERVER
+<span class="kw">FROM SPECIFICATION</span> $$
+  tools:
+  - name: <span class="str">"retailiq_analyst"</span>
+    type: <span class="str">"CORTEX_ANALYST_MESSAGE"</span>
+    identifier: <span class="str">"RETAILIQ_DB.ANALYTICS.RETAILIQ_SV"</span>
+  - name: <span class="str">"retailiq_reviews_search"</span>
+    type: <span class="str">"CORTEX_SEARCH_SERVICE_QUERY"</span>
+    identifier: <span class="str">"RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH"</span>
+$$;</pre>
+      </div>
+      <div class="col">
+        <h3>PAT Token — scoped authentication</h3>
+        <pre><span class="cmt">-- Run as ACCOUNTADMIN</span>
+<span class="kw">ALTER USER</span> retailiq_user
+  <span class="kw">ADD PROGRAMMATIC ACCESS TOKEN</span>
+    retailiq_mcp_token
+  DAYS_TO_EXPIRY = <span class="num">7</span>
+  ROLE_RESTRICTION = <span class="str">'RETAILIQ_ROLE'</span>;
+
+<span class="cmt">-- ⚠ Token shown ONCE — save it now!</span></pre>
+        <h3>Get your endpoint URL</h3>
+        <pre><span class="kw">DESCRIBE MCP SERVER</span> RETAILIQ_MCP_SERVER;
+<span class="cmt">-- endpoint: https://YOUR_LOCATOR
+--   .snowflakecomputing.com/mcp/...</span></pre>
+        <div class="talking-point" style="margin-top:12px;">
+          <p><strong>Save before next module:</strong> MCP endpoint URL + PAT token value + account locator. These go into the CloudFormation parameters.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 10 — AGENTCORE -->
+  <div class="slide slide-aws" id="s10">
+    <div class="slide-header">
+      <span class="slide-tag">Module 6 · AWS Bedrock AgentCore</span>
+      <h2>AgentCore: Managed Agent Runtime</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>What AgentCore provides</h3>
+        <div class="card card-orange">
+          <p><strong>Runtime:</strong> Managed Python execution environment — no EC2 instance management in production. Handles scaling, isolation, and execution state</p>
+        </div>
+        <div class="card card-orange">
+          <p><strong>Memory:</strong> Session memory that persists conversation history across turns. The agent "remembers" what was said earlier in the session</p>
+        </div>
+        <div class="card card-orange">
+          <p><strong>Gateway:</strong> Proxies outbound MCP calls to Snowflake. Handles retries, auth injection, and response validation</p>
+        </div>
+        <div class="card card-orange">
+          <p><strong>Observability:</strong> Built-in trace viewer showing tool selection decisions, latency per tool, and model reasoning</p>
+        </div>
+      </div>
+      <div class="col">
+        <h3>Workshop setup (CloudFormation)</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Upload template</div>
+              <p>CloudFormation → Create Stack → Upload <code>agentcore_cfn.yaml</code></p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Fill parameters</div>
+              <p>Snowflake MCP endpoint, PAT token, account locator — all from the previous module</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Wait ~5 minutes</div>
+              <p>Stack deploys EC2 with Python 3.11 + Strands + credentials pre-loaded from Secrets Manager</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Connect via EC2 Instance Connect</div>
+              <p>Outputs → EC2ConnectionURL → open in browser. No SSH key needed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 11 — STRANDS AGENT -->
+  <div class="slide slide-aws" id="s11">
+    <div class="slide-header">
+      <span class="slide-tag">Module 7 · Strands Agent</span>
+      <h2>The Python Agent: Strands + MCP</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <pre><span class="kw">from</span> strands <span class="kw">import</span> Agent
+<span class="kw">from</span> strands_tools <span class="kw">import</span> mcp_client
+
+<span class="cmt"># Credentials auto-loaded from Secrets Manager on EC2</span>
+credentials = <span class="fn">load_credentials_from_secrets_manager</span>()
+
+<span class="cmt"># Connect to Snowflake MCP Server</span>
+snowflake_mcp = <span class="fn">mcp_client</span>(
+    url=credentials[<span class="str">"snowflake_mcp_endpoint"</span>],
+    headers={<span class="str">"Authorization"</span>:
+      <span class="fn">f</span><span class="str">"Bearer {credentials['pat_token']}"</span>}
+)
+
+agent = <span class="fn">Agent</span>(
+    model=<span class="str">"us.anthropic.claude-sonnet-4-5-v1:0"</span>,
+    tools=[snowflake_mcp],
+    system_prompt=RETAILIQ_SYSTEM_PROMPT
+)</pre>
+      </div>
+      <div class="col">
+        <h3>Multi-turn demo (shows Memory value)</h3>
+        <div class="card" style="margin-bottom:10px; border-left:3px solid rgba(255,153,0,0.5);">
+          <p><strong>Turn 1:</strong> "Analyze revenue by region for this year"<br><span style="color:rgba(255,255,255,0.45);font-size:0.78rem;">→ Agent returns regional revenue breakdown</span></p>
+        </div>
+        <div class="card" style="margin-bottom:10px; border-left:3px solid rgba(255,153,0,0.5);">
+          <p><strong>Turn 2:</strong> "Focus on the bottom 3 — what are customers saying there?"<br><span style="color:rgba(255,255,255,0.45);font-size:0.78rem;">→ Agent remembers the regions, searches reviews for those regions specifically</span></p>
+        </div>
+        <div class="card" style="margin-bottom:10px; border-left:3px solid rgba(255,153,0,0.5);">
+          <p><strong>Turn 3:</strong> "What actions would you recommend for those regions?"<br><span style="color:rgba(255,255,255,0.45);font-size:0.78rem;">→ Synthesizes quantitative + qualitative data into actionable recommendations</span></p>
+        </div>
+        <div class="talking-point">
+          <p><strong>This is the "money demo":</strong> without AgentCore Memory, Turn 2 would not know what "the bottom 3" means. Memory is what transforms a stateless LLM call into a coherent business conversation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 12 — PRODUCTION SECURITY -->
+  <div class="slide slide-content" id="s12">
+    <div class="slide-header">
+      <span class="slide-tag">Module 8 · Production Patterns</span>
+      <h2>Security: Dev vs Production</h2>
+    </div>
+    <table class="sec-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Workshop (today)</th>
+          <th>Production</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Auth</td><td>PAT token, 7-day expiry</td><td>PAT + short TTL rotation via Secrets Manager, ROLE_RESTRICTION to read-only role</td></tr>
+        <tr><td>Network</td><td>Open (0.0.0.0/0)</td><td>Network Policy: whitelist AgentCore NAT Gateway IPs only</td></tr>
+        <tr><td>Role permissions</td><td>RETAILIQ_ROLE (all tables)</td><td>Least-privilege read-only role; Row Access Policy for data segmentation</td></tr>
+        <tr><td>Warehouse</td><td>XSmall, single cluster</td><td>Multi-cluster with auto-scaling + query acceleration</td></tr>
+        <tr><td>Monitoring</td><td>Terminal logs</td><td>AgentCore traces + Snowflake QUERY_HISTORY + CloudWatch alarms</td></tr>
+        <tr><td>MCP scope</td><td>All tools, all data</td><td>Tool-level grants per team; column-level Security on sensitive fields</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:20px;">
+      <pre><span class="cmt">-- Lock MCP down to AgentCore egress IPs only</span>
+<span class="kw">CREATE OR REPLACE NETWORK POLICY</span> agentcore_only
+  ALLOWED_IP_LIST = (<span class="str">'X.X.X.X/32'</span>, <span class="str">'Y.Y.Y.Y/32'</span>) <span class="cmt">-- AgentCore NAT IPs from AWS console</span>
+  COMMENT = <span class="str">'Restrict MCP access to AgentCore egress IPs'</span>;
+
+<span class="kw">ALTER USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY = agentcore_only;</pre>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 13 — COMPARISON -->
+  <div class="slide slide-content" id="s13">
+    <div class="slide-header">
+      <span class="slide-tag">Architecture Patterns</span>
+      <h2>Choosing the Right Pattern</h2>
+    </div>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th class="sf">Cortex Native Agent</th>
+          <th class="aws">AgentCore + Snowflake MCP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Primary use case</td><td>Snowflake-centric analytics teams, CoWork users</td><td>AWS-centric applications, multi-service orchestration</td></tr>
+        <tr><td>Agent framework</td><td>Snowflake managed, no code required</td><td>Strands, LangGraph, CrewAI, LlamaIndex, OpenAI SDK — any framework</td></tr>
+        <tr><td>Memory / context</td><td>Session-level in CoWork</td><td>AgentCore Memory (configurable retention, cross-session)</td></tr>
+        <tr><td>External tools</td><td>Cortex tools only</td><td>Any AWS service + Snowflake + other MCP servers combined</td></tr>
+        <tr><td>Runtime management</td><td>Fully managed by Snowflake</td><td>Fully managed by AWS AgentCore Runtime</td></tr>
+        <tr><td>Governance scope</td><td>Snowflake RBAC end-to-end</td><td>Snowflake RBAC for data + AWS IAM for infrastructure</td></tr>
+        <tr><td>Best for</td><td>Single-stack Snowflake deployments, internal analytics</td><td>Multi-cloud agentic apps, integrating Amazon Location / Bedrock KB / S3</td></tr>
+      </tbody>
+    </table>
+    <div class="talking-point" style="margin-top:16px;">
+      <p><strong>These are complementary, not competing.</strong> Many customers run the native Cortex Agent for internal analyst teams while AgentCore powers customer-facing applications — both pointing at the same Snowflake data via MCP.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 14 — WHAT YOU BUILT -->
+  <div class="slide slide-content" id="s14">
+    <div class="slide-header">
+      <span class="slide-tag">Wrap-up</span>
+      <h2>What You Built Today</h2>
+    </div>
+    <div class="built-grid">
+      <div class="built-item">
+        <div class="built-icon">📊</div>
+        <div class="built-name">Semantic View</div>
+        <div class="built-desc">4 tables, 13 metrics, 19 dimensions, 10 verified queries — tuned for the RetailIQ domain</div>
+      </div>
+      <div class="built-item">
+        <div class="built-icon">🔍</div>
+        <div class="built-name">Cortex Search ×2</div>
+        <div class="built-desc">Hybrid semantic search over 15k reviews and 8k support tickets — no vector DB</div>
+      </div>
+      <div class="built-item">
+        <div class="built-icon">🤖</div>
+        <div class="built-name">Cortex Agent</div>
+        <div class="built-desc">Native Snowflake agent combining Analyst + Search, tested in CoWork with cross-tool queries</div>
+      </div>
+      <div class="built-item">
+        <div class="built-icon">🔌</div>
+        <div class="built-name">MCP Server</div>
+        <div class="built-desc">Standards-based Snowflake endpoint, PAT-authenticated, role-scoped, fully audited</div>
+      </div>
+      <div class="built-item">
+        <div class="built-icon">☁️</div>
+        <div class="built-name">AgentCore Stack</div>
+        <div class="built-desc">CloudFormation-deployed EC2 + Strands agent with Secrets Manager credential injection</div>
+      </div>
+      <div class="built-item">
+        <div class="built-icon">💬</div>
+        <div class="built-name">Multi-turn Agent</div>
+        <div class="built-desc">End-to-end conversational agent with AgentCore Memory, combining structured + unstructured data</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ SLIDE 15 — RESOURCES -->
+  <div class="slide slide-end" id="s15">
+    <div style="max-width:760px;width:100%;">
+      <div class="cover-eyebrow">Resources &amp; Next Steps</div>
+      <div class="cover-title" style="font-size:2.2rem;margin-bottom:28px;">Thank you!</div>
+      <div class="resource-grid">
+        <div class="resource-card">
+          <a href="https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp">Snowflake Managed MCP Server</a>
+          <p>Official docs — endpoint creation, auth, tool configuration</p>
+        </div>
+        <div class="resource-card">
+          <a href="https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst">Cortex Analyst &amp; Semantic Views</a>
+          <p>YAML reference, verified queries, metric definitions</p>
+        </div>
+        <div class="resource-card">
+          <a href="https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview">Cortex Search</a>
+          <p>Hybrid search, service creation, filtering attributes</p>
+        </div>
+        <div class="resource-card">
+          <a href="https://aws.amazon.com/bedrock/agentcore/">Amazon Bedrock AgentCore</a>
+          <p>Runtime, Memory, Gateway — production deployment guide</p>
+        </div>
+        <div class="resource-card">
+          <a href="https://strandsagents.com">Strands Agents SDK</a>
+          <p>Python framework for building agents with tool calling</p>
+        </div>
+        <div class="resource-card">
+          <a href="https://catalog.us-east-1.prod.workshops.aws/workshops/2d4e5ea4-78c8-496f-8246-50d8971414c9">AWS + Snowflake Workshop</a>
+          <p>Additional AWS workshops covering the joint architecture</p>
+        </div>
+      </div>
+      <div class="cover-meta" style="margin-top:28px;">
+        <span>📁 All lab files: <strong>WORKSHOP_RETAIL_IQ/</strong></span>
+        <span>❓ Questions → raise your hand</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── PROGRESS + NAV ── -->
+<div id="progress"></div>
+<div id="nav">
+  <button class="nav-btn" id="prev" title="Previous (←)">‹</button>
+  <span id="slide-counter">1 / 15</span>
+  <button class="nav-btn" id="next" title="Next (→)">›</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  function go(n) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, total - 1));
+    slides[current].classList.add('active');
+    document.getElementById('slide-counter').textContent = `${current + 1} / ${total}`;
+    document.getElementById('progress').style.width = `${((current + 1) / total) * 100}%`;
+  }
+
+  document.getElementById('next').addEventListener('click', () => go(current + 1));
+  document.getElementById('prev').addEventListener('click', () => go(current - 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); go(current + 1); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); go(current - 1); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End')  go(total - 1);
+  });
+
+  // Touch/swipe support
+  let touchX = null;
+  document.addEventListener('touchstart', e => { touchX = e.changedTouches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (touchX === null) return;
+    const diff = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) go(diff > 0 ? current + 1 : current - 1);
+    touchX = null;
+  }, { passive: true });
+
+  // Init progress bar
+  document.getElementById('progress').style.width = `${(1 / total) * 100}%`;
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+store_id,store_name,city,region,store_type,opening_year,employee_count
+STR_001,RetailIQ Lecce Salesiani,Lecce,Puglia,Standard,2019,21
+STR_002,RetailIQ Torino Centro,Torino,Piemonte,Pop-Up,2010,8
+STR_003,RetailIQ Trento Gardolo,Trento,Trentino-Alto Adige,Flagship,2022,58
+STR_004,RetailIQ Verona Arena,Verona,Veneto,Standard,2023,22
+STR_005,RetailIQ Perugia Centro,Perugia,Umbria,Standard,2016,23
+STR_006,RetailIQ Milano Porta Nuova,Milano,Lombardia,Standard,2020,26
+STR_007,RetailIQ Cagliari Castello,Cagliari,Sardegna,Standard,2015,26
+STR_008,RetailIQ Lecce Rudiae,Lecce,Puglia,Express,2020,9
+STR_009,RetailIQ Trieste Centro,Trieste,Friuli-Venezia Giulia,Flagship,2019,80
+STR_010,RetailIQ Reggio Calabria Sbarre,Reggio Calabria,Calabria,Flagship,2018,55
+STR_011,RetailIQ Catania Ognina,Catania,Sicilia,Standard,2017,27
+STR_012,RetailIQ Perugia Monteluce,Perugia,Umbria,Pop-Up,2020,8
+STR_013,RetailIQ Verona Veronetta,Verona,Veneto,Express,2020,10
+STR_014,RetailIQ Bologna Centro,Bologna,Emilia-Romagna,Standard,2013,16
+STR_015,RetailIQ Bari Carbonara,Bari,Puglia,Standard,2016,23
+STR_016,RetailIQ Catania Centro,Catania,Sicilia,Standard,2013,33
+STR_017,RetailIQ Torino Porta Susa,Torino,Piemonte,Standard,2013,35
+STR_018,RetailIQ Roma Trastevere,Roma,Lazio,Standard,2016,35
+STR_019,RetailIQ Bari Poggiofranco,Bari,Puglia,Standard,2012,23
+STR_020,RetailIQ Napoli Mergellina,Napoli,Campania,Standard,2013,32
+STR_021,RetailIQ Catania San Giovanni,Catania,Sicilia,Flagship,2021,77
+STR_022,RetailIQ Bari Poggiofranco,Bari,Puglia,Standard,2019,27
+STR_023,RetailIQ Reggio Calabria Archi,Reggio Calabria,Calabria,Standard,2013,19
+STR_024,RetailIQ Firenze Pitti,Firenze,Toscana,Standard,2011,16
+STR_025,RetailIQ Roma Termini,Roma,Lazio,Standard,2012,35
+STR_026,RetailIQ Napoli Mergellina,Napoli,Campania,Flagship,2022,67
+STR_027,RetailIQ Milano Centrale,Milano,Lombardia,Standard,2011,27
+STR_028,RetailIQ Napoli Chiaia,Napoli,Campania,Standard,2019,29
+STR_029,RetailIQ Bologna Zanardi,Bologna,Emilia-Romagna,Standard,2018,15
+STR_030,RetailIQ Padova Centro,Padova,Veneto,Standard,2020,32
+STR_031,RetailIQ Lecce Salesiani,Lecce,Puglia,Flagship,2022,61
+STR_032,RetailIQ Palermo Centro,Palermo,Sicilia,Standard,2014,28
+STR_033,RetailIQ Reggio Calabria Sbarre,Reggio Calabria,Calabria,Standard,2017,15
+STR_034,RetailIQ Venezia Cannaregio,Venezia,Veneto,Express,2018,7
+STR_035,RetailIQ Palermo Centro,Palermo,Sicilia,Pop-Up,2023,8
+STR_036,RetailIQ Padova Portello,Padova,Veneto,Express,2023,15
+STR_037,RetailIQ Cagliari Castello,Cagliari,Sardegna,Standard,2012,26
+STR_038,RetailIQ Firenze Oltrarno,Firenze,Toscana,Standard,2018,31
+STR_039,RetailIQ Padova Centro,Padova,Veneto,Flagship,2019,60
+STR_040,RetailIQ Trieste Borgo Teresiano,Trieste,Friuli-Venezia Giulia,Standard,2010,18
+STR_041,RetailIQ Trieste Opicina,Trieste,Friuli-Venezia Giulia,Standard,2023,24
+STR_042,RetailIQ Venezia Lido,Venezia,Veneto,Standard,2010,22
+STR_043,RetailIQ Ancona Centro,Ancona,Marche,Standard,2011,30
+STR_044,RetailIQ Firenze Duomo,Firenze,Toscana,Express,2022,13
+STR_045,RetailIQ Genova Sampierdarena,Genova,Liguria,Standard,2012,30
+STR_046,RetailIQ Ancona Piano San Lazzaro,Ancona,Marche,Flagship,2014,73
+STR_047,RetailIQ Bologna Santo Stefano,Bologna,Emilia-Romagna,Standard,2013,32
+STR_048,RetailIQ Trento Gardolo,Trento,Trentino-Alto Adige,Standard,2021,24
+STR_049,RetailIQ Verona Golosine,Verona,Veneto,Standard,2020,35
+STR_050,RetailIQ Torino Porta Susa,Torino,Piemonte,Standard,2017,31

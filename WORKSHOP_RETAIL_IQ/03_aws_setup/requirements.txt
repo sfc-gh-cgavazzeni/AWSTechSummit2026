@@ -1,0 +1,22 @@
+# RetailIQ AgentCore Workshop — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Strands Agents framework (AWS open-source) ────────────────────────────────
+strands-agents>=0.1.0
+strands-agents-tools>=0.1.0
+
+# ── AWS SDK ───────────────────────────────────────────────────────────────────
+boto3>=1.34.0
+botocore>=1.34.0
+
+# ── HTTP client (used internally by Strands MCP SSE transport) ────────────────
+httpx>=0.27.0
+requests>=2.31.0
+
+# ── Rich terminal output (optional — improves readability) ────────────────────
+rich>=13.7.0
+
+# ── Bedrock AgentCore Starter Toolkit (install when available on PyPI) ─────────
+# Uncomment when the package is released:
+# bedrock-agentcore-starter-toolkit>=0.1.0
+# bedrock-agentcore>=0.1.0

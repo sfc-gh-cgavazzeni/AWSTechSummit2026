@@ -1,0 +1,556 @@
+name: RETAILIQ_SV
+description: "Semantic View for RetailIQ retail analytics — covers sales performance, customer behavior, product analytics, and store operations across Italian regions."
+
+tables:
+  - name: orders
+    description: "Transactional order records including channel, pricing, quantity, discount, shipping, and return details."
+    base_table: RETAILIQ_DB.ANALYTICS.ORDERS
+    primary_key:
+      columns: [order_id]
+
+  - name: products
+    description: "Product catalog with category hierarchy, brand, cost, list price, and premium flag."
+    base_table: RETAILIQ_DB.ANALYTICS.PRODUCTS
+    primary_key:
+      columns: [product_id]
+
+  - name: customers
+    description: "Customer master data including location (city/region), loyalty tier, age group, and signup date."
+    base_table: RETAILIQ_DB.ANALYTICS.CUSTOMERS
+    primary_key:
+      columns: [customer_id]
+
+  - name: stores
+    description: "Physical and digital store locations with type, region, opening year, and employee headcount."
+    base_table: RETAILIQ_DB.ANALYTICS.STORES
+    primary_key:
+      columns: [store_id]
+
+relationships:
+  - name: orders_to_products
+    left_table: orders
+    right_table: products
+    join_type: left
+    relationship_type: many_to_one
+    join_condition:
+      left_column: product_id
+      right_column: product_id
+
+  - name: orders_to_customers
+    left_table: orders
+    right_table: customers
+    join_type: left
+    relationship_type: many_to_one
+    join_condition:
+      left_column: customer_id
+      right_column: customer_id
+
+  - name: orders_to_stores
+    left_table: orders
+    right_table: stores
+    join_type: left
+    relationship_type: many_to_one
+    join_condition:
+      left_column: store_id
+      right_column: store_id
+
+dimensions:
+  # ── Order dimensions ──────────────────────────────────────────────────────
+  - name: order_channel
+    description: "Sales channel through which the order was placed: In-Store, Online, or Mobile App."
+    expr: orders.channel
+    data_type: TEXT
+    synonyms:
+      - channel
+      - sales channel
+      - purchase channel
+      - how purchased
+      - canale
+
+  - name: order_status
+    description: "Current status of the order: Completed, Returned, Pending, or Cancelled."
+    expr: orders.status
+    data_type: TEXT
+    synonyms:
+      - status
+      - order state
+      - stato ordine
+
+  - name: order_date
+    description: "Date on which the order was placed."
+    expr: orders.order_date
+    data_type: DATE
+    synonyms:
+      - date
+      - when
+      - order day
+      - purchase date
+      - data ordine
+
+  - name: order_month
+    description: "Calendar month in which the order was placed, truncated to the first day of the month."
+    expr: DATE_TRUNC('month', orders.order_date)
+    data_type: DATE
+    synonyms:
+      - month
+      - monthly
+      - mese
+
+  - name: order_quarter
+    description: "Calendar quarter in which the order was placed, truncated to the first day of the quarter."
+    expr: DATE_TRUNC('quarter', orders.order_date)
+    data_type: DATE
+    synonyms:
+      - quarter
+      - quarterly
+      - trimestre
+
+  - name: order_year
+    description: "Calendar year in which the order was placed."
+    expr: YEAR(orders.order_date)
+    data_type: NUMBER
+    synonyms:
+      - year
+      - annual
+      - anno
+
+  - name: is_return
+    description: "Indicates whether the order was flagged as a return."
+    expr: orders.return_flag
+    data_type: BOOLEAN
+    synonyms:
+      - return
+      - returned
+      - reso
+      - has return
+
+  # ── Product dimensions ────────────────────────────────────────────────────
+  - name: product_name
+    description: "Commercial name of the product."
+    expr: products.product_name
+    data_type: TEXT
+    synonyms:
+      - product
+      - item
+      - article
+      - prodotto
+
+  - name: product_category
+    description: "Top-level product category (e.g. Electronics, Clothing, Home & Kitchen)."
+    expr: products.category
+    data_type: TEXT
+    synonyms:
+      - category
+      - product type
+      - department
+      - categoria
+
+  - name: product_subcategory
+    description: "Second-level product classification within a category."
+    expr: products.subcategory
+    data_type: TEXT
+    synonyms:
+      - subcategory
+      - sub-category
+      - sottocategoria
+
+  - name: brand
+    description: "Brand of the product."
+    expr: products.brand
+    data_type: TEXT
+    synonyms:
+      - brand
+      - marchio
+      - manufacturer
+
+  - name: is_premium_product
+    description: "Indicates whether the product is classified as a premium or luxury item."
+    expr: products.is_premium
+    data_type: BOOLEAN
+    synonyms:
+      - premium
+      - luxury
+      - premium product
+      - lusso
+
+  # ── Customer dimensions ───────────────────────────────────────────────────
+  - name: customer_region
+    description: "Italian region in which the customer is located (e.g. Lombardia, Lazio, Veneto)."
+    expr: customers.region
+    data_type: TEXT
+    synonyms:
+      - region
+      - area
+      - geographic area
+      - zona
+      - regione
+
+  - name: customer_city
+    description: "City where the customer resides."
+    expr: customers.city
+    data_type: TEXT
+    synonyms:
+      - city
+      - città
+      - customer city
+
+  - name: loyalty_tier
+    description: "Customer loyalty programme tier: Bronze, Silver, Gold, or Platinum."
+    expr: customers.loyalty_tier
+    data_type: TEXT
+    synonyms:
+      - loyalty
+      - tier
+      - membership level
+      - card type
+      - fidelity tier
+      - programma fedeltà
+
+  - name: customer_age_group
+    description: "Customer age bracket (e.g. 18-24, 25-34, 35-44, 45-54, 55+)."
+    expr: customers.age_group
+    data_type: TEXT
+    synonyms:
+      - age
+      - demographic
+      - fascia d'età
+      - age bracket
+      - age range
+
+  # ── Store dimensions ──────────────────────────────────────────────────────
+  - name: store_region
+    description: "Italian region where the store is located."
+    expr: stores.region
+    data_type: TEXT
+    synonyms:
+      - store area
+      - negozio regione
+      - store region
+
+  - name: store_type
+    description: "Store format: Flagship, Standard, Express, or Online."
+    expr: stores.store_type
+    data_type: TEXT
+    synonyms:
+      - store format
+      - tipo negozio
+      - format
+
+  - name: store_name
+    description: "Name or identifier of the retail store or outlet."
+    expr: stores.store_name
+    data_type: TEXT
+    synonyms:
+      - store
+      - location
+      - negozio
+      - punto vendita
+
+metrics:
+  - name: total_revenue
+    description: "Total revenue from completed orders (status = 'Completed')."
+    expr: SUM(CASE WHEN orders.status = 'Completed' THEN orders.total_amount ELSE 0 END)
+    data_type: NUMBER
+    synonyms:
+      - revenue
+      - sales
+      - fatturato
+      - total sales
+      - gross revenue
+      - ricavi
+      - vendite
+
+  - name: order_count
+    description: "Total number of distinct orders with status Completed or Returned."
+    expr: COUNT(DISTINCT CASE WHEN orders.status IN ('Completed', 'Returned') THEN orders.order_id END)
+    data_type: NUMBER
+    synonyms:
+      - number of orders
+      - orders
+      - "# orders"
+      - ordini
+      - total orders
+
+  - name: completed_order_count
+    description: "Number of distinct orders with status Completed."
+    expr: COUNT(DISTINCT CASE WHEN orders.status = 'Completed' THEN orders.order_id END)
+    data_type: NUMBER
+    synonyms:
+      - completed orders
+      - confirmed orders
+      - ordini completati
+
+  - name: average_order_value
+    description: "Average revenue per completed order (total revenue divided by completed order count)."
+    expr: >-
+      SUM(CASE WHEN orders.status = 'Completed' THEN orders.total_amount ELSE 0 END)
+      / NULLIF(COUNT(DISTINCT CASE WHEN orders.status = 'Completed' THEN orders.order_id END), 0)
+    data_type: NUMBER
+    synonyms:
+      - AOV
+      - average basket
+      - scontrino medio
+      - average ticket
+      - basket size
+
+  - name: return_rate
+    description: "Fraction of all orders that were returned."
+    expr: >-
+      COUNT(DISTINCT CASE WHEN orders.return_flag = TRUE THEN orders.order_id END)
+      / NULLIF(COUNT(DISTINCT orders.order_id), 0)
+    data_type: NUMBER
+    synonyms:
+      - return ratio
+      - "% returns"
+      - tasso resi
+      - resi
+
+  - name: total_units_sold
+    description: "Total quantity of product units sold across completed orders."
+    expr: SUM(CASE WHEN orders.status = 'Completed' THEN orders.quantity ELSE 0 END)
+    data_type: NUMBER
+    synonyms:
+      - units
+      - items sold
+      - pezzi venduti
+      - quantity sold
+      - volume
+
+  - name: customer_count
+    description: "Number of distinct customers who placed at least one order."
+    expr: COUNT(DISTINCT orders.customer_id)
+    data_type: NUMBER
+    synonyms:
+      - customers
+      - unique customers
+      - clienti
+      - number of customers
+
+  - name: new_customer_count
+    description: "Number of distinct customers whose signup year matches the order year (proxy for new customers in that period)."
+    expr: COUNT(DISTINCT CASE WHEN YEAR(customers.signup_date) = YEAR(orders.order_date) THEN orders.customer_id END)
+    data_type: NUMBER
+    synonyms:
+      - new customers
+      - nuovi clienti
+      - first-time customers
+      - customer acquisition
+
+  - name: average_discount
+    description: "Average discount percentage applied on orders where a discount was given (discount_pct > 0)."
+    expr: AVG(CASE WHEN orders.discount_pct > 0 THEN orders.discount_pct END)
+    data_type: NUMBER
+    synonyms:
+      - discount
+      - sconto medio
+      - average discount rate
+      - avg discount
+
+  - name: revenue_per_customer
+    description: "Average revenue generated per unique customer."
+    expr: >-
+      SUM(CASE WHEN orders.status = 'Completed' THEN orders.total_amount ELSE 0 END)
+      / NULLIF(COUNT(DISTINCT orders.customer_id), 0)
+    data_type: NUMBER
+    synonyms:
+      - ARPU
+      - average revenue per customer
+      - ricavo per cliente
+
+  - name: gross_margin
+    description: "Gross margin from completed orders, calculated as revenue minus product cost."
+    expr: >-
+      SUM(CASE WHEN orders.status = 'Completed'
+          THEN orders.total_amount - (orders.quantity * products.unit_cost)
+          ELSE 0 END)
+    data_type: NUMBER
+    synonyms:
+      - margin
+      - profitto
+      - profit
+      - margine lordo
+      - gross profit
+
+  - name: gross_margin_pct
+    description: "Gross margin as a percentage of total revenue for completed orders."
+    expr: >-
+      SUM(CASE WHEN orders.status = 'Completed'
+          THEN orders.total_amount - (orders.quantity * products.unit_cost)
+          ELSE 0 END)
+      / NULLIF(SUM(CASE WHEN orders.status = 'Completed' THEN orders.total_amount ELSE 0 END), 0)
+    data_type: NUMBER
+    synonyms:
+      - "margin %"
+      - profit margin
+      - margine percentuale
+      - gross margin rate
+
+  - name: avg_shipping_days
+    description: "Average number of days from order placement to delivery, excluding In-Store orders."
+    expr: AVG(CASE WHEN orders.channel != 'In-Store' THEN orders.shipping_days END)
+    data_type: NUMBER
+    synonyms:
+      - delivery time
+      - shipping speed
+      - giorni di spedizione
+      - lead time
+
+verified_queries:
+  - name: top_5_categories_by_revenue
+    question: "What are the top 5 product categories by revenue in the last 3 months?"
+    sql: |
+      SELECT
+          p.category,
+          SUM(o.total_amount) AS total_revenue
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.PRODUCTS p
+          ON o.product_id = p.product_id
+      WHERE o.status = 'Completed'
+        AND o.order_date >= DATEADD('day', -90, CURRENT_DATE())
+      GROUP BY p.category
+      ORDER BY total_revenue DESC
+      LIMIT 5
+
+  - name: revenue_by_region_ytd
+    question: "What is the total revenue by customer region year-to-date?"
+    sql: |
+      SELECT
+          c.region,
+          SUM(o.total_amount) AS total_revenue
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.CUSTOMERS c
+          ON o.customer_id = c.customer_id
+      WHERE o.status = 'Completed'
+        AND YEAR(o.order_date) = YEAR(CURRENT_DATE())
+      GROUP BY c.region
+      ORDER BY total_revenue DESC
+
+  - name: monthly_revenue_trend_last_12m
+    question: "Show me the monthly revenue trend for the last 12 months."
+    sql: |
+      SELECT
+          DATE_TRUNC('month', o.order_date) AS order_month,
+          SUM(o.total_amount)               AS total_revenue
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      WHERE o.status = 'Completed'
+        AND o.order_date >= DATEADD('month', -12, DATE_TRUNC('month', CURRENT_DATE()))
+      GROUP BY DATE_TRUNC('month', o.order_date)
+      ORDER BY order_month ASC
+
+  - name: top_10_products_by_units
+    question: "Which are the top 10 best-selling products by units sold this year?"
+    sql: |
+      SELECT
+          p.product_name,
+          p.category,
+          SUM(o.quantity) AS total_units_sold
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.PRODUCTS p
+          ON o.product_id = p.product_id
+      WHERE o.status = 'Completed'
+        AND YEAR(o.order_date) = YEAR(CURRENT_DATE())
+      GROUP BY p.product_name, p.category
+      ORDER BY total_units_sold DESC
+      LIMIT 10
+
+  - name: return_rate_by_category
+    question: "What is the return rate by product category?"
+    sql: |
+      SELECT
+          p.category,
+          COUNT(DISTINCT o.order_id)                                             AS total_orders,
+          COUNT(DISTINCT CASE WHEN o.return_flag = TRUE THEN o.order_id END)     AS returned_orders,
+          COUNT(DISTINCT CASE WHEN o.return_flag = TRUE THEN o.order_id END)
+              / NULLIF(COUNT(DISTINCT o.order_id), 0)                            AS return_rate
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.PRODUCTS p
+          ON o.product_id = p.product_id
+      GROUP BY p.category
+      ORDER BY return_rate DESC
+
+  - name: revenue_by_channel_and_loyalty
+    question: "How does revenue break down by sales channel and customer loyalty tier?"
+    sql: |
+      SELECT
+          o.channel,
+          c.loyalty_tier,
+          SUM(o.total_amount) AS total_revenue,
+          COUNT(DISTINCT o.order_id) AS order_count
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.CUSTOMERS c
+          ON o.customer_id = c.customer_id
+      WHERE o.status = 'Completed'
+      GROUP BY o.channel, c.loyalty_tier
+      ORDER BY o.channel, total_revenue DESC
+
+  - name: avg_order_value_by_store_type
+    question: "What is the average order value by store type?"
+    sql: |
+      SELECT
+          s.store_type,
+          SUM(o.total_amount)                                              AS total_revenue,
+          COUNT(DISTINCT o.order_id)                                       AS order_count,
+          SUM(o.total_amount) / NULLIF(COUNT(DISTINCT o.order_id), 0)     AS avg_order_value
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.STORES s
+          ON o.store_id = s.store_id
+      WHERE o.status = 'Completed'
+      GROUP BY s.store_type
+      ORDER BY avg_order_value DESC
+
+  - name: new_vs_returning_customers
+    question: "How many new vs returning customers placed orders this year?"
+    sql: |
+      WITH first_purchase AS (
+          SELECT
+              customer_id,
+              MIN(order_date) AS first_order_date
+          FROM RETAILIQ_DB.ANALYTICS.ORDERS
+          GROUP BY customer_id
+      ),
+      current_year_customers AS (
+          SELECT DISTINCT o.customer_id
+          FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+          WHERE YEAR(o.order_date) = YEAR(CURRENT_DATE())
+            AND o.status IN ('Completed', 'Returned')
+      )
+      SELECT
+          SUM(CASE WHEN YEAR(fp.first_order_date) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END) AS new_customers,
+          SUM(CASE WHEN YEAR(fp.first_order_date) < YEAR(CURRENT_DATE())  THEN 1 ELSE 0 END) AS returning_customers
+      FROM current_year_customers cyc
+      JOIN first_purchase fp
+          ON cyc.customer_id = fp.customer_id
+
+  - name: premium_vs_standard_product_margin
+    question: "What is the gross margin for premium vs standard products?"
+    sql: |
+      SELECT
+          CASE WHEN p.is_premium = TRUE THEN 'Premium' ELSE 'Standard' END AS product_type,
+          SUM(o.total_amount)                                                             AS total_revenue,
+          SUM(o.total_amount - (o.quantity * p.unit_cost))                               AS gross_margin,
+          SUM(o.total_amount - (o.quantity * p.unit_cost))
+              / NULLIF(SUM(o.total_amount), 0)                                           AS gross_margin_pct
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.PRODUCTS p
+          ON o.product_id = p.product_id
+      WHERE o.status = 'Completed'
+      GROUP BY CASE WHEN p.is_premium = TRUE THEN 'Premium' ELSE 'Standard' END
+      ORDER BY product_type
+
+  - name: top_stores_by_revenue
+    question: "What are the top 10 stores by revenue this year?"
+    sql: |
+      SELECT
+          s.store_name,
+          s.store_type,
+          s.region,
+          SUM(o.total_amount)        AS total_revenue,
+          COUNT(DISTINCT o.order_id) AS order_count
+      FROM RETAILIQ_DB.ANALYTICS.ORDERS o
+      JOIN RETAILIQ_DB.ANALYTICS.STORES s
+          ON o.store_id = s.store_id
+      WHERE o.status = 'Completed'
+        AND YEAR(o.order_date) = YEAR(CURRENT_DATE())
+      GROUP BY s.store_name, s.store_type, s.region
+      ORDER BY total_revenue DESC
+      LIMIT 10
