@@ -10,7 +10,9 @@
 By the end of this workshop, you will have deployed a production-style AI agent that:
 
 1. Answers **quantitative business questions** ("What is revenue by region this quarter?") by generating and executing SQL against a Snowflake **Semantic View** via **Cortex Analyst**
+
 2. Answers **qualitative questions** ("What are customers saying about delivery?") via **Cortex Search** over unstructured review and ticket data
+
 3. Orchestrates both capabilities through the **Snowflake Managed MCP Server**, exposed to **AWS Bedrock AgentCore** as a fully managed, multi-turn conversational agent
 
 ```
@@ -36,11 +38,17 @@ By the end of this workshop, you will have deployed a production-style AI agent 
 ## Scenario: RetailIQ
 
 RetailIQ is an Italian multi-channel retailer with 50 stores across Italy plus an online shop. The data covers:
+
 - **50,000 orders** across 3 years (2022–2024)
+
 - **5,000 customers** with loyalty tiers and regional data
+
 - **200 products** across 5 categories
+
 - **50 stores** across Italian regions
+
 - **15,000 customer reviews** (for Cortex Search)
+
 - **8,000 support tickets** (for Cortex Search)
 
 ---
@@ -48,16 +56,23 @@ RetailIQ is an Italian multi-channel retailer with 50 stores across Italy plus a
 ## Prerequisites
 
 **Snowflake:**
+
 - A Snowflake account with Cortex features enabled (Cortex Search, Cortex Analyst, MCP Server)
+
 - ACCOUNTADMIN access (or an admin who can run `01_setup_environment.sql`)
 
 **AWS:**
+
 - AWS account with access to Amazon Bedrock
+
 - A Claude Sonnet model subscribed in AWS Marketplace
+
 - IAM permissions to deploy CloudFormation stacks and create Secrets Manager secrets
 
 **Local (facilitator only):**
+
 - Python 3.9+ with pandas, numpy, faker (`pip install pandas numpy faker`)
+
 - To generate the dataset: `python 00_data/generate_data.py`
 
 ---
@@ -91,6 +106,7 @@ For this workshop, we'll create a **Git Workspace** linked to the public GitHub 
 **Step 1 — Open the Projects menu**
 
 1. In Snowsight, click **Projects** in the left navigation sidebar
+
 2. At the top, make sure you are on the **Workspaces** tab
 
 ![Workspaces menu](assets/workspaces1.jpg)
@@ -98,6 +114,7 @@ For this workshop, we'll create a **Git Workspace** linked to the public GitHub 
 **Step 2 — Create a new Git Workspace**
 
 1. Click the **"+"** button next to the search icon in the top toolbar
+
 2. In the dropdown, under **"Create new"**, select **"Git workspace"**
 
 ![Create Git workspace option](assets/workspaces2.jpg)
@@ -107,9 +124,13 @@ For this workshop, we'll create a **Git Workspace** linked to the public GitHub 
 In the "Create workspace from Git repository" dialog:
 
 - **Repository URL**: enter `https://github.com/sfc-gh-cgavazzeni/AWSTechSummit2026/`
+
 - **Workspace name**: enter `AWSTechSummit2026` (or any name you prefer)
+
 - **API integration**: select your existing Git API integration (or click **"+ API Integration"** to create one)
+
 - **Authentication**: select **"Public repository"** (no authentication needed — the repo is public)
+
 - Click **"Create"**
 
 ![Create workspace from Git repository](assets/workspaces3.jpg)
@@ -123,10 +144,15 @@ After creation, you'll see the full workshop file tree in the left panel:
 ![Workspace with all workshop files](assets/workspaces4.jpg)
 
 You can now open any SQL file directly from the workspace (it opens as a SQL worksheet), run it, and navigate between files. All workshop modules are organized in numbered folders:
+
 - `00_data/` — synthetic dataset and generator
+
 - `01_snowflake_setup/` — all SQL scripts (modules 0–5 + cleanup)
+
 - `02_semantic_view/` — Semantic View DDL
+
 - `03_aws_setup/` — CloudFormation + Strands agent
+
 - `04_slides/` — presentation deck
 
 ---
@@ -138,9 +164,13 @@ You can now open any SQL file directly from the workspace (it opens as a SQL wor
 Open `01_snowflake_setup/01_setup_environment.sql` in a Snowflake SQL worksheet and run it top to bottom.
 
 This creates:
+
 - Role `RETAILIQ_ROLE` and user `retailiq_user`
+
 - Warehouse `RETAILIQ_WH` (XSmall, auto-suspend 60s)
+
 - Database `RETAILIQ_DB` and schema `ANALYTICS`
+
 - Stage `RETAILIQ_STG` for data loading
 
 > **Presenter tip:** While this runs, explain the Snowflake object hierarchy to the audience.
@@ -164,11 +194,17 @@ This creates:
    ![Upload files dialog](assets/loadinstage3.jpg)
 
 Upload these files from the `00_data/` folder:
+
 - `orders.csv`
+
 - `products.csv`
+
 - `customers.csv`
+
 - `stores.csv`
+
 - `customer_reviews.csv`
+
 - `support_tickets.csv`
 
 **Step 2:** Run `01_snowflake_setup/02_create_tables.sql` to create tables.
@@ -196,9 +232,13 @@ support_tickets:   ~8,000
 #### What is a Semantic View?
 
 A Semantic View is a **business vocabulary layer** that sits between your raw tables and Cortex Analyst. It defines:
+
 - How tables **join** to each other
+
 - What **dimensions** and **metrics** mean in business terms
+
 - **Synonyms** so the AI understands "revenue", "fatturato", "sales" all mean the same thing
+
 - **Verified Queries** — pre-validated SQL for your most important KPIs
 
 **The key insight for SA architects:** *A Semantic View gives you full control over the vocabulary and logic the AI uses. The difference between a bare auto-generated SV and a tuned one with verified queries is the difference between a demo and a production deployment.*
@@ -224,17 +264,25 @@ no synonyms — just the foundation.
 > **What happens:** CoCo invokes the `semantic-view` skill which reads the table schemas via `DESCRIBE TABLE`, infers join relationships (via matching column names like `product_id`, `customer_id`, `store_id`), generates column descriptions from the column names, and produces a complete YAML file. It will also deploy the SV to Snowflake.
 
 **Watch CoCo work** — it will:
+
 1. Inspect all 4 table schemas
+
 2. Detect 3 join paths (orders→products, orders→customers, orders→stores)
+
 3. Generate column-level descriptions
+
 4. Create and deploy the Semantic View
 
 **Now test the basic SV in Cortex Analyst Playground:**
 
 1. In Snowsight, click the **AI & ML** icon (brain icon) in the left navigation sidebar
+
 2. Select **Cortex Analyst** from the menu
+
 3. You'll see a list of available Semantic Views — click on **RETAILIQ_SV_BASIC** (the one CoCo just created)
+
 4. Click the **Playground** tab at the top to open the interactive chat interface
+
 5. In the chat box at the bottom, type and send:
 
 > "What is the revenue by region for this year?"
@@ -252,8 +300,11 @@ Now that we have a basic SV, let's use it to understand **how Analyst works unde
 When Analyst returns the answer, click on the **SQL** panel to expand it. You'll see two distinct query representations:
 
 **1. Logical Query** — This is the *semantic-level* plan that Analyst generates first. It describes WHAT to compute using the vocabulary defined in your Semantic View (metric names, dimension names, filters). Think of it as the "intent" expressed in business terms:
+
 - Which metric to compute (e.g., `total_amount`)
+
 - Which dimension to group by (e.g., `channel`)
+
 - Which filters to apply (e.g., time range)
 
 **2. Physical Query** — This is the actual executable Snowflake SQL that gets run against your warehouse. It translates the logical plan into concrete JOINs, column references, and WHERE clauses. This is what you'd have to write manually without Analyst.
@@ -261,15 +312,23 @@ When Analyst returns the answer, click on the **SQL** panel to expand it. You'll
 > **Why this matters for SAs:** The logical/physical split is what makes Analyst production-safe. The LLM only generates the logical plan (constrained by the Semantic View vocabulary). The physical query is deterministically derived from the SV definition — no hallucinated table names, no invented columns. This is a fundamentally different architecture from "just ask GPT to write SQL".
 
 **3. The "+ Verified Query" button** — Notice the **+ Verified Query** button (or similar "Save as VQ" action) that appears alongside the generated SQL. This is the fast path for tuning: if the generated SQL is correct, you can save it directly as a Verified Query so that next time this question (or a similar one) is asked, Analyst uses your validated SQL as-is. This is the iterative tuning loop:
+
 1. Ask a question → Analyst generates SQL
+
 2. Verify the SQL is correct
+
 3. Click "+ Verified Query" to lock it in
+
 4. Next time, Analyst matches the question pattern and reuses the exact validated SQL
 
 **4. Response metadata** — Expand the response metadata panel (usually accessible via an info icon or "Details" section in the response). This shows:
+
 - **Confidence score** — how confident Analyst is in the generated SQL
+
 - **Matched Verified Query** — if the answer was served from a VQ match (will show "None" for now since we have no VQs yet)
+
 - **Semantic View used** — which SV was selected
+
 - **Tokens used** — for cost tracking
 
 > **Purpose of metadata for production teams:** Response metadata enables monitoring and observability in production deployments. You can track: (a) what % of questions are being answered by VQs vs generated on the fly, (b) which questions have low confidence and need VQs, (c) token cost per question for budget planning. This is how you build a tuning roadmap — focus VQ effort on the highest-volume, lowest-confidence questions first.
@@ -279,8 +338,11 @@ When Analyst returns the answer, click on the **SQL** panel to expand it. You'll
 Now let's replace the basic SV with the hand-crafted one that has metrics, synonyms, and verified queries.
 
 1. Go back to your **Workspace** in Snowsight (click the workspace icon in the left sidebar)
+
 2. Open a **new SQL Worksheet** — name it `Creating a Semantic View`
+
 3. Import the file `02_semantic_view/create_semantic_view.sql` from the workshop repo (or copy-paste its contents into the worksheet)
+
 4. Run the entire worksheet — it executes a single `CREATE OR REPLACE SEMANTIC VIEW` DDL statement that defines all tables, relationships, dimensions, facts, metrics, custom instructions, and verified queries in one go.
 
 > While it runs, walk through the DDL structure with the audience. Highlight what the basic CoCo-generated SV was missing: **metric definitions** (like `total_revenue = SUM(...) WHERE status='Completed'`), **synonyms** (Italian + English), **IS_ENUM** with sample_values, **AI_SQL_GENERATION** custom instructions, and **AI_VERIFIED_QUERIES**.
@@ -294,15 +356,21 @@ SHOW SEMANTIC VIEWS LIKE 'RETAILIQ_SV' IN SCHEMA RETAILIQ_DB.ANALYTICS;
 #### Step 2c — Test with the Tuned Semantic View (5 min)
 
 Ask the same question again with `RETAILIQ_SV` (the tuned one). Compare:
+
 - The SQL now correctly uses `SUM(total_amount) WHERE status='Completed'`
+
 - "Region" resolves unambiguously to `customers.region`
+
 - Synonyms mean "fatturato", "revenue", "sales" all work
 
 #### Step 2d — Tune Further: Add a Verified Query (5 min)
 
 In the Analyst UI, click on the Semantic View and add a new Verified Query:
+
 - Question: "What is our return rate by product category?"
+
 - Use the SQL from `retailiq_semantic_view.yaml` as a reference
+
 - Save and re-test — the VQ guarantees the exact SQL you validated
 
 **Takeaway:** Verified Queries are the single most impactful tuning mechanism. They guarantee correct SQL for your most important business questions. Start with auto-generate to get a baseline, then iteratively add metrics, synonyms, and VQs.
@@ -314,7 +382,9 @@ In the Analyst UI, click on the Semantic View and add a new Verified Query:
 Run `01_snowflake_setup/04_create_search_service.sql`.
 
 This creates two search services:
+
 - `RETAILIQ_REVIEWS_SEARCH` — over customer review text
+
 - `RETAILIQ_TICKETS_SEARCH` — over support ticket text
 
 **Test queries to demonstrate semantic matching (not just keyword):**
@@ -341,11 +411,13 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 **Step 4a — Create the Cortex Agent from Snowsight UI**
 
 1. In Snowsight, click the **AI & ML** icon (brain icon) in the left sidebar
+
 2. Select **Cortex Agents** from the menu
 
    ![Cortex Agents menu](assets/agentsmenu.jpg)
 
 3. Click **"+ Create Agent"** (top-right) to create a new agent
+
 4. In the "Create agent" dialog:
    - **Database and schema**: select `RETAILIQ_DB` → `ANALYTICS`
    - **Agent object name**: enter `RETAILIQ_CORTEX_AGENT`
@@ -403,6 +475,7 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
    *(Leave Web search OFF, Code Execution tool ON by default)*
 
 7. Click the **General** tab and set the **Query Warehouse** to `RETAILIQ_WH`
+
 8. Click **"Save"** to save the agent configuration
 
 > **Talking point:** Notice how tool descriptions are critical — they guide the agent's reasoning about WHICH tool to call for each question. Good descriptions = accurate tool selection.
@@ -410,8 +483,11 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 **Step 4b — Open CoWork and select the agent**
 
 1. In Snowsight, click the **AI & ML** icon (brain icon) in the left sidebar
+
 2. Select **CoWork** from the menu
+
 3. Click **"New Session"** (or the `+` button) to start a new conversation
+
 4. In the agent selector dropdown, choose **RETAILIQ_CORTEX_AGENT**
 
 **Step 4c — Demo questions (run in this order to show progressive complexity)**
@@ -470,13 +546,16 @@ Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)
 **Deploy the CloudFormation stack:**
 
 1. Go to AWS Console → CloudFormation → Create Stack
+
 2. Upload `03_aws_setup/agentcore_cfn.yaml`
+
 3. Fill in parameters:
    - `SnowflakeMCPEndpoint`: the URL from Module 5
    - `SnowflakePATToken`: the PAT token from Module 5
    - `SnowflakeAccountLocator`: your account locator
    - `KeyPairName`: an existing EC2 key pair
    - `SubnetId` / `VpcId`: a public subnet in any VPC
+
 4. Acknowledge IAM creation and click Submit
 
 **Wait ~5 minutes** for the stack to complete.
@@ -510,8 +589,11 @@ You'll see the welcome banner. Test with the sample questions from `help`:
 ```
 
 **Watch the terminal output** — you'll see:
+
 - Which tool was selected (Analyst vs Search)
+
 - The query sent to each tool
+
 - How the agent synthesizes the answer
 
 **Multi-turn demo** (shows AgentCore Memory value):
@@ -553,10 +635,15 @@ ALTER USER retailiq_user SET NETWORK_POLICY = agentcore_only;
 ```
 
 **Seed Q&A questions (for facilitators):**
+
 - *"Can I use this with Bedrock Knowledge Bases instead of Cortex Search?"* → Yes, but you lose Snowflake governance and the hybrid search quality
+
 - *"What's the latency like?"* → Typical: Analyst ~2-5s, Search ~1-2s, full agent turn ~5-12s
+
 - *"Does AgentCore support streaming?"* → Yes, the Strands SDK supports streaming responses
+
 - *"Can multiple teams share the same MCP server?"* → Yes, tool-level access is controlled by role grants
+
 - *"Is there a cost calculator?"* → Show Cortex token pricing + AgentCore runtime pricing
 
 ---
@@ -572,9 +659,15 @@ In AWS: delete the CloudFormation stack (`agentcore-retailiq-workshop`).
 ## Resources
 
 - [Snowflake Cortex Agents docs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents)
+
 - [Snowflake Managed MCP Server](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp)
+
 - [Cortex Analyst & Semantic Views](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst)
+
 - [Cortex Search](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview)
+
 - [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/)
+
 - [Strands Agents SDK](https://strandsagents.com)
+
 - [AWS + Snowflake Reference Architecture](https://catalog.us-east-1.prod.workshops.aws/workshops/2d4e5ea4-78c8-496f-8246-50d8971414c9)
