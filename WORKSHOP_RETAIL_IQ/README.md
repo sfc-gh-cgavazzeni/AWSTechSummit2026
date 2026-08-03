@@ -416,6 +416,28 @@ In the Analyst UI, click on the Semantic View and add a new Verified Query:
 
 ### Module 3 — Cortex Search `[10 min]`
 
+#### What is Cortex Search?
+
+Cortex Search is Snowflake's fully managed search service that combines **full-text search** (BM25) with **vector/semantic search** (embeddings) in a single hybrid retrieval engine — no external infrastructure required.
+
+**Key benefits compared to traditional RAG pipelines:**
+
+| Traditional RAG | Cortex Search |
+|---|---|
+| You manage embedding model, vector DB (Pinecone, Weaviate, etc.), chunking logic, sync pipelines | Snowflake manages everything — one DDL statement |
+| Data leaves Snowflake → copied to external vector store | Data stays in Snowflake — no data movement, no security gaps |
+| You maintain sync between source tables and vector index | Auto-refreshes from source table (TARGET_LAG) — always up to date |
+| You implement hybrid search (keyword + semantic) yourself | Built-in hybrid retrieval combining BM25 + embedding similarity |
+| Separate cost for embedding API calls + vector DB hosting | Included in Snowflake serverless compute — pay per query |
+
+**Where does embedding happen?** Snowflake automatically generates and stores embeddings internally when you create the search service. You never see or manage the vectors — Cortex Search handles tokenization, embedding, indexing, and retrieval entirely within the Snowflake security perimeter.
+
+**Where is the vector database?** There is no external vector database. Snowflake stores the vector index as an internal optimized structure, co-located with your data. This means: governance (RBAC, masking) applies to search results, no data exfiltration risk, and zero operational overhead.
+
+> **Talking point for SAs:** Cortex Search eliminates the entire retrieval infrastructure stack. One SQL statement replaces: embedding model deployment, vector store provisioning, data sync pipelines, and hybrid search orchestration.
+
+---
+
 Run `01_snowflake_setup/04_create_search_service.sql`.
 
 This creates two search services:
@@ -424,18 +446,41 @@ This creates two search services:
 
 - `RETAILIQ_TICKETS_SEARCH` — over support ticket text
 
-**Test queries to demonstrate semantic matching (not just keyword):**
+**Test the search services:**
 
+Open a new SQL worksheet and run these queries to see semantic matching in action:
+
+```sql
+-- Semantic search on reviews: finds results about delivery issues
+-- even if the exact word "delivery" doesn't appear in the text
+SELECT *
+FROM TABLE(
+  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+    'RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH',
+    '{
+      "query": "delivery problems in southern Italy",
+      "columns": ["review_text", "product_name", "rating"],
+      "limit": 5
+    }'
+  )
+);
+
+-- Semantic search on tickets: finds billing/refund issues
+-- without needing exact keyword matches
+SELECT *
+FROM TABLE(
+  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+    'RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH',
+    '{
+      "query": "refund not processed",
+      "columns": ["ticket_text", "category", "status"],
+      "limit": 5
+    }'
+  )
+);
 ```
-"delivery problems in southern Italy"
-→ finds reviews mentioning slow shipping, lost packages, Sicilia/Napoli
 
-"customers unhappy with electronics"
-→ finds negative reviews about tech products without needing exact keywords
-
-"refund not processed"
-→ finds support tickets about billing and returns
-```
+Notice how the results match **semantically** — for example, "delivery problems" finds reviews mentioning slow shipping, lost packages, or courier issues in Sicily/Naples, even if the exact phrase "delivery problems" never appears. This is the power of hybrid search (BM25 + vector embeddings) vs. pure keyword matching.
 
 **Key message for SA architects:** Cortex Search is a **hybrid search** (full-text + vector embedding) with no infrastructure to manage. Zero vector database to deploy, zero embedding pipeline to maintain.
 

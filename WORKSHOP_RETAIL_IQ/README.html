@@ -599,6 +599,66 @@ baseline, then iteratively add metrics, synonyms, and VQs.</p>
 <hr />
 <h3 id="module-3-cortex-search-10-min">Module 3 — Cortex Search
 <code>[10 min]</code></h3>
+<h4 id="what-is-cortex-search">What is Cortex Search?</h4>
+<p>Cortex Search is Snowflake’s fully managed search service that
+combines <strong>full-text search</strong> (BM25) with
+<strong>vector/semantic search</strong> (embeddings) in a single hybrid
+retrieval engine — no external infrastructure required.</p>
+<p><strong>Key benefits compared to traditional RAG
+pipelines:</strong></p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Traditional RAG</th>
+<th>Cortex Search</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>You manage embedding model, vector DB (Pinecone, Weaviate, etc.),
+chunking logic, sync pipelines</td>
+<td>Snowflake manages everything — one DDL statement</td>
+</tr>
+<tr>
+<td>Data leaves Snowflake → copied to external vector store</td>
+<td>Data stays in Snowflake — no data movement, no security gaps</td>
+</tr>
+<tr>
+<td>You maintain sync between source tables and vector index</td>
+<td>Auto-refreshes from source table (TARGET_LAG) — always up to
+date</td>
+</tr>
+<tr>
+<td>You implement hybrid search (keyword + semantic) yourself</td>
+<td>Built-in hybrid retrieval combining BM25 + embedding similarity</td>
+</tr>
+<tr>
+<td>Separate cost for embedding API calls + vector DB hosting</td>
+<td>Included in Snowflake serverless compute — pay per query</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Where does embedding happen?</strong> Snowflake automatically
+generates and stores embeddings internally when you create the search
+service. You never see or manage the vectors — Cortex Search handles
+tokenization, embedding, indexing, and retrieval entirely within the
+Snowflake security perimeter.</p>
+<p><strong>Where is the vector database?</strong> There is no external
+vector database. Snowflake stores the vector index as an internal
+optimized structure, co-located with your data. This means: governance
+(RBAC, masking) applies to search results, no data exfiltration risk,
+and zero operational overhead.</p>
+<blockquote>
+<p><strong>Talking point for SAs:</strong> Cortex Search eliminates the
+entire retrieval infrastructure stack. One SQL statement replaces:
+embedding model deployment, vector store provisioning, data sync
+pipelines, and hybrid search orchestration.</p>
+</blockquote>
+<hr />
 <p>Run <code>01_snowflake_setup/04_create_search_service.sql</code>.</p>
 <p>This creates two search services:</p>
 <ul>
@@ -607,16 +667,41 @@ text</p></li>
 <li><p><code>RETAILIQ_TICKETS_SEARCH</code> — over support ticket
 text</p></li>
 </ul>
-<p><strong>Test queries to demonstrate semantic matching (not just
-keyword):</strong></p>
-<pre><code>&quot;delivery problems in southern Italy&quot;
-→ finds reviews mentioning slow shipping, lost packages, Sicilia/Napoli
-
-&quot;customers unhappy with electronics&quot;
-→ finds negative reviews about tech products without needing exact keywords
-
-&quot;refund not processed&quot;
-→ finds support tickets about billing and returns</code></pre>
+<p><strong>Test the search services:</strong></p>
+<p>Open a new SQL worksheet and run these queries to see semantic
+matching in action:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Semantic search on reviews: finds results about delivery issues</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- even if the exact word &quot;delivery&quot; doesn&#39;t appear in the text</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> <span class="kw">TABLE</span>(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH&#39;</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;{</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;query&quot;: &quot;delivery problems in southern Italy&quot;,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;columns&quot;: [&quot;review_text&quot;, &quot;product_name&quot;, &quot;rating&quot;],</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;limit&quot;: 5</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="st">    }&#39;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- Semantic search on tickets: finds billing/refund issues</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">-- without needing exact keyword matches</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> <span class="kw">TABLE</span>(</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH&#39;</span>,</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;{</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;query&quot;: &quot;refund not processed&quot;,</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;columns&quot;: [&quot;ticket_text&quot;, &quot;category&quot;, &quot;status&quot;],</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;limit&quot;: 5</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="st">    }&#39;</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>Notice how the results match <strong>semantically</strong> — for
+example, “delivery problems” finds reviews mentioning slow shipping,
+lost packages, or courier issues in Sicily/Naples, even if the exact
+phrase “delivery problems” never appears. This is the power of hybrid
+search (BM25 + vector embeddings) vs. pure keyword matching.</p>
 <p><strong>Key message for SA architects:</strong> Cortex Search is a
 <strong>hybrid search</strong> (full-text + vector embedding) with no
 infrastructure to manage. Zero vector database to deploy, zero embedding

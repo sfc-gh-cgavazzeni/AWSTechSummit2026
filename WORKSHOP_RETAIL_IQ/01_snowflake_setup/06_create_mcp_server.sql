@@ -17,33 +17,24 @@ USE WAREHOUSE RETAILIQ_WH;
 -- ==================================================================================
 CREATE OR REPLACE MCP SERVER RETAILIQ_MCP_SERVER
 FROM SPECIFICATION $$
-{
-    "capabilities": {
-        "tools": [
-            {
-                "name": "retailiq_analyst",
-                "type": "CORTEX_ANALYST_MESSAGE",
-                "identifier": "RETAILIQ_DB.ANALYTICS.RETAILIQ_SV",
-                "description": "Structured analytics tool for RetailIQ sales, orders, customers and stores data. Use for quantitative questions about revenue, conversion rates, order volumes, customer segments, regional performance, product categories, and time-series trends.",
-                "title": "RetailIQ Analytics"
-            },
-            {
-                "name": "retailiq_reviews_search",
-                "type": "CORTEX_SEARCH_SERVICE_QUERY",
-                "identifier": "RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH",
-                "description": "Semantic search over RetailIQ customer reviews. Use for qualitative insights, sentiment analysis, product feedback, and understanding what customers say about their experiences.",
-                "title": "Customer Reviews Search"
-            },
-            {
-                "name": "retailiq_tickets_search",
-                "type": "CORTEX_SEARCH_SERVICE_QUERY",
-                "identifier": "RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH",
-                "description": "Semantic search over support tickets. Use for understanding common issues, complaints, return reasons, and service quality feedback.",
-                "title": "Support Tickets Search"
-            }
-        ]
-    }
-}
+tools:
+  - name: "retailiq_analyst"
+    type: "CORTEX_ANALYST_MESSAGE"
+    identifier: "RETAILIQ_DB.ANALYTICS.RETAILIQ_SV"
+    description: "Structured analytics tool for RetailIQ sales, orders, customers and stores data. Use for quantitative questions about revenue, conversion rates, order volumes, customer segments, regional performance, product categories, and time-series trends."
+    title: "RetailIQ Analytics"
+
+  - name: "retailiq_reviews_search"
+    type: "CORTEX_SEARCH_SERVICE_QUERY"
+    identifier: "RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH"
+    description: "Semantic search over RetailIQ customer reviews. Use for qualitative insights, sentiment analysis, product feedback, and understanding what customers say about their experiences."
+    title: "Customer Reviews Search"
+
+  - name: "retailiq_tickets_search"
+    type: "CORTEX_SEARCH_SERVICE_QUERY"
+    identifier: "RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH"
+    description: "Semantic search over support tickets. Use for understanding common issues, complaints, return reasons, and service quality feedback."
+    title: "Support Tickets Search"
 $$;
 
 -- ==================================================================================
