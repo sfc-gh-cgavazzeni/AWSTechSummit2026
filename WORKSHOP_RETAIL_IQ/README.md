@@ -175,6 +175,24 @@ This creates:
 
 > **Presenter tip:** While this runs, explain the Snowflake object hierarchy to the audience.
 
+**Step — Download CSV files locally**
+
+Before uploading data to the stage, you need to download all CSV files from the workspace to your local laptop. This is the easiest code-free way to get data into Snowflake.
+
+In the workspace file tree (left panel), expand the `00_data` folder. For each CSV file, click the **⋯** (three dots) menu next to the file name and select **Download**:
+
+![Download files from workspace](assets/download.jpg)
+
+Download all 6 CSV files:
+- `customers.csv`
+- `customer_reviews.csv`
+- `orders.csv`
+- `products.csv`
+- `stores.csv`
+- `support_tickets.csv`
+
+Save them to a known folder on your laptop (e.g., `Downloads/retailiq_data/`). You will upload them to the Snowflake stage in the next module.
+
 ---
 
 ### Module 1 — Load Data `[10 min]`
