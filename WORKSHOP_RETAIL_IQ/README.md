@@ -167,24 +167,67 @@ no synonyms — just the foundation.
 3. Generate column-level descriptions
 4. Create and deploy the Semantic View
 
-**Now test the basic SV.** Open CoWork or the Analyst chat, select `RETAILIQ_SV_BASIC`, and ask:
+**Now test the basic SV in Cortex Analyst Playground:**
+
+1. In Snowsight, click the **AI & ML** icon (brain icon) in the left navigation sidebar
+2. Select **Cortex Analyst** from the menu
+3. You'll see a list of available Semantic Views — click on **RETAILIQ_SV_BASIC** (the one CoCo just created)
+4. Click the **Playground** tab at the top to open the interactive chat interface
+5. In the chat box at the bottom, type and send:
+
 > "What is the revenue by region for this year?"
 
 Observe the gap: the basic SV has no concept of "revenue" as a metric (it doesn't know to filter `status='Completed'`), "region" is ambiguous (customer region? store region?), and there are no synonyms or verified queries. The generated SQL may be wrong or imprecise.
 
 > **Talking point for SAs:** *CoCo got us from zero to a working Semantic View in 30 seconds — no YAML authoring, no documentation lookup. But a basic auto-scaffolded SV is like auto-generated API docs: technically correct but not useful for production. The real value comes from tuning.*
 
-#### Step 2b — Upload the Tuned Semantic View (10 min)
+#### Step 2a-bis — Understand How Cortex Analyst Processes a Question (5 min)
 
-Now let's replace it with the hand-crafted SV that has metrics, synonyms, and verified queries.
+Now that we have a basic SV, let's use it to understand **how Analyst works under the hood**. In the Playground, ask a question that the basic SV can handle reasonably well:
 
-1. Navigate to `AI & ML → Cortex Analyst → Create New`
-2. Select `Upload your YAML file`
-3. Upload `02_semantic_view/retailiq_semantic_view.yaml`
-4. Select `RETAILIQ_DB → ANALYTICS` then `RETAILIQ_STG` stage
-5. Click `Upload` then `Save`
+> "What is the total revenue by channel year to date?"
 
-> While it processes, walk through the YAML structure: tables, relationships, dimensions, metrics, verified_queries. Highlight what the auto-generated SV was missing.
+When Analyst returns the answer, click on the **SQL** panel to expand it. You'll see two distinct query representations:
+
+**1. Logical Query** — This is the *semantic-level* plan that Analyst generates first. It describes WHAT to compute using the vocabulary defined in your Semantic View (metric names, dimension names, filters). Think of it as the "intent" expressed in business terms:
+- Which metric to compute (e.g., `total_amount`)
+- Which dimension to group by (e.g., `channel`)
+- Which filters to apply (e.g., time range)
+
+**2. Physical Query** — This is the actual executable Snowflake SQL that gets run against your warehouse. It translates the logical plan into concrete JOINs, column references, and WHERE clauses. This is what you'd have to write manually without Analyst.
+
+> **Why this matters for SAs:** The logical/physical split is what makes Analyst production-safe. The LLM only generates the logical plan (constrained by the Semantic View vocabulary). The physical query is deterministically derived from the SV definition — no hallucinated table names, no invented columns. This is a fundamentally different architecture from "just ask GPT to write SQL".
+
+**3. The "+ Verified Query" button** — Notice the **+ Verified Query** button (or similar "Save as VQ" action) that appears alongside the generated SQL. This is the fast path for tuning: if the generated SQL is correct, you can save it directly as a Verified Query so that next time this question (or a similar one) is asked, Analyst uses your validated SQL as-is. This is the iterative tuning loop:
+1. Ask a question → Analyst generates SQL
+2. Verify the SQL is correct
+3. Click "+ Verified Query" to lock it in
+4. Next time, Analyst matches the question pattern and reuses the exact validated SQL
+
+**4. Response metadata** — Expand the response metadata panel (usually accessible via an info icon or "Details" section in the response). This shows:
+- **Confidence score** — how confident Analyst is in the generated SQL
+- **Matched Verified Query** — if the answer was served from a VQ match (will show "None" for now since we have no VQs yet)
+- **Semantic View used** — which SV was selected
+- **Tokens used** — for cost tracking
+
+> **Purpose of metadata for production teams:** Response metadata enables monitoring and observability in production deployments. You can track: (a) what % of questions are being answered by VQs vs generated on the fly, (b) which questions have low confidence and need VQs, (c) token cost per question for budget planning. This is how you build a tuning roadmap — focus VQ effort on the highest-volume, lowest-confidence questions first.
+
+#### Step 2b — Deploy the Tuned Semantic View via SQL (10 min)
+
+Now let's replace the basic SV with the hand-crafted one that has metrics, synonyms, and verified queries.
+
+1. Go back to your **Workspace** in Snowsight (click the workspace icon in the left sidebar)
+2. Open a **new SQL Worksheet** — name it `Creating a Semantic View`
+3. Import the file `02_semantic_view/create_semantic_view.sql` from the workshop repo (or copy-paste its contents into the worksheet)
+4. Run the entire worksheet — it executes a single `CREATE OR REPLACE SEMANTIC VIEW` DDL statement that defines all tables, relationships, dimensions, facts, metrics, custom instructions, and verified queries in one go.
+
+> While it runs, walk through the DDL structure with the audience. Highlight what the basic CoCo-generated SV was missing: **metric definitions** (like `total_revenue = SUM(...) WHERE status='Completed'`), **synonyms** (Italian + English), **IS_ENUM** with sample_values, **AI_SQL_GENERATION** custom instructions, and **AI_VERIFIED_QUERIES**.
+
+5. Verify the SV was created:
+
+```sql
+SHOW SEMANTIC VIEWS LIKE 'RETAILIQ_SV' IN SCHEMA RETAILIQ_DB.ANALYTICS;
+```
 
 #### Step 2c — Test with the Tuned Semantic View (5 min)
 
