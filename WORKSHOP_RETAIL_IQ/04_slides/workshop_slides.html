@@ -511,10 +511,10 @@
         </div>
       </div>
       <div class="col">
-        <h3>Auto-generated SV vs Tuned SV</h3>
+        <h3>CoCo-generated SV vs Tuned SV</h3>
         <div class="vq-before">
-          <div class="vq-label">Auto-generated (minimal) Semantic View</div>
-          <code>-- No metrics, no synonyms, no VQs<br>SELECT store_id, SUM(amount)<br>FROM orders GROUP BY 1<br><br>-- Wrong: uses store instead of customer<br>-- region; omits Completed filter</code>
+          <div class="vq-label">Basic SV scaffolded by Cortex Code</div>
+          <code>-- CoCo auto-detected joins & columns<br>-- but no metrics, no synonyms, no VQs<br>SELECT store_id, SUM(amount)<br>FROM orders GROUP BY 1<br><br>-- Wrong: uses store instead of customer<br>-- region; omits Completed filter</code>
         </div>
         <div class="vq-after">
           <div class="vq-label">Tuned SV with metrics + Verified Queries</div>

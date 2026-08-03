@@ -141,19 +141,38 @@ A Semantic View is a **business vocabulary layer** that sits between your raw ta
 
 **The key insight for SA architects:** *A Semantic View gives you full control over the vocabulary and logic the AI uses. The difference between a bare auto-generated SV and a tuned one with verified queries is the difference between a demo and a production deployment.*
 
-#### Step 2a — Auto-Generated (Minimal) Semantic View (5 min)
+#### Step 2a — Build a Basic Semantic View with Cortex Code (10 min)
 
-Cortex Analyst always requires a Semantic View — there's no "zero SV" mode. But the quality of the SV determines the quality of the answers. Let's start with a bare-bones auto-generated one to see the gap.
+Cortex Analyst always requires a Semantic View — there's no "zero SV" mode. But rather than hand-writing YAML from scratch, we'll use **Cortex Code** (CoCo) and its **semantic-view skill** to scaffold a first version automatically from the schema.
 
-1. Navigate to `AI & ML → Cortex Analyst → Create New`
-2. Select **Generate from tables** (not "Upload YAML")
-3. Pick all 4 tables: `ORDERS`, `PRODUCTS`, `CUSTOMERS`, `STORES`
-4. Let the UI auto-generate joins and columns — accept defaults and save as `RETAILIQ_SV_BASIC`
+**Open Cortex Code** (CoCo Desktop or the browser IDE) connected to the `RETAILIQ_DB.ANALYTICS` schema.
 
-Now ask:
+In the CoCo chat, type the following prompt:
+
+```
+Create a semantic view called RETAILIQ_SV_BASIC for the tables
+RETAILIQ_DB.ANALYTICS.ORDERS, RETAILIQ_DB.ANALYTICS.PRODUCTS,
+RETAILIQ_DB.ANALYTICS.CUSTOMERS, and RETAILIQ_DB.ANALYTICS.STORES.
+
+Keep it simple: just define the tables, detect the join relationships,
+and add basic column descriptions. No verified queries, no custom metrics,
+no synonyms — just the foundation.
+```
+
+> **What happens:** CoCo invokes the `semantic-view` skill which reads the table schemas via `DESCRIBE TABLE`, infers join relationships (via matching column names like `product_id`, `customer_id`, `store_id`), generates column descriptions from the column names, and produces a complete YAML file. It will also deploy the SV to Snowflake.
+
+**Watch CoCo work** — it will:
+1. Inspect all 4 table schemas
+2. Detect 3 join paths (orders→products, orders→customers, orders→stores)
+3. Generate column-level descriptions
+4. Create and deploy the Semantic View
+
+**Now test the basic SV.** Open CoWork or the Analyst chat, select `RETAILIQ_SV_BASIC`, and ask:
 > "What is the revenue by region for this year?"
 
-Observe: the auto-generated SV has no concept of "revenue" (it doesn't know to filter `status='Completed'`), "region" is ambiguous (customer region? store region?), and there are no synonyms. The generated SQL is likely wrong or imprecise.
+Observe the gap: the basic SV has no concept of "revenue" as a metric (it doesn't know to filter `status='Completed'`), "region" is ambiguous (customer region? store region?), and there are no synonyms or verified queries. The generated SQL may be wrong or imprecise.
+
+> **Talking point for SAs:** *CoCo got us from zero to a working Semantic View in 30 seconds — no YAML authoring, no documentation lookup. But a basic auto-scaffolded SV is like auto-generated API docs: technically correct but not useful for production. The real value comes from tuning.*
 
 #### Step 2b — Upload the Tuned Semantic View (10 min)
 
