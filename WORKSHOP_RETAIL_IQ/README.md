@@ -5,6 +5,16 @@
 
 ---
 
+## Overview
+
+**Cortex Agents** orchestrate across both structured and unstructured data sources to deliver insights. They plan tasks, use tools to execute these tasks, and generate responses. Agents use Cortex Analyst (structured) and Cortex Search (unstructured) as tools, along with LLMs, to analyze data. Cortex Search extracts insights from unstructured sources, while Cortex Analyst generates SQL to process structured data. A comprehensive support for tool identification and tool execution enables delivery of sophisticated applications grounded in enterprise data.
+
+The **Snowflake-managed MCP server** lets AI agents securely retrieve data from Snowflake accounts without needing to deploy separate infrastructure. You can configure the MCP server to serve Cortex Analyst and Cortex Search as tools on the standards-based interface. MCP clients discover and invoke these tools, and retrieve data required for the application. With managed MCP servers on Snowflake, you can build scalable enterprise-grade applications while maintaining access and privacy controls.
+
+**Amazon Bedrock AgentCore** is an agentic platform to build, deploy, and operate highly capable agents securely at scale. With AgentCore you can easily enable agents to take actions across tools and data, run agents securely with low-latency and extended runtimes, and monitor agents in production — all without any infrastructure management. AgentCore is comprised of fully-managed services that can be used together or independently and work with any framework (including CrewAI, LangGraph, LlamaIndex, Google ADK, OpenAI Agents SDK, and Strands Agents), as well as any foundation model — eliminating the choice between open-source flexibility and enterprise-grade security and reliability.
+
+---
+
 ## What You'll Build
 
 By the end of this workshop, you will have deployed a production-style AI agent that:
