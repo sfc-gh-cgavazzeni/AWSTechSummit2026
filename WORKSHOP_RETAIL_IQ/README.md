@@ -309,7 +309,7 @@ no synonyms — just the foundation.
 
 Observe the gap: the basic SV has no concept of "revenue" as a metric (it doesn't know to filter `status='Completed'`), "region" is ambiguous (customer region? store region?), and there are no synonyms or verified queries. The generated SQL may be wrong or imprecise.
 
-> **Talking point for SAs:** *CoCo got us from zero to a working Semantic View in 30 seconds — no YAML authoring, no documentation lookup. But a basic auto-scaffolded SV is like auto-generated API docs: technically correct but not useful for production. The real value comes from tuning.*
+> **Talking point for SAs:** *CoCo got us from zero to a working Semantic View in 30 seconds — no YAML authoring, no documentation lookup. But a basic auto-scaffolded SV is like auto-generated API docs: technically correct but not useful for production. The real value comes from tuning. However, if you provide CoCo with richer context — for example, an Excel file describing your data model with metric definitions, join keys, synonyms, and business descriptions — you can get a production-quality Semantic View even on the first shot. What really makes the difference is the context you provide.*
 
 #### Step 2a-bis — Understand How Cortex Analyst Processes a Question (5 min)
 
