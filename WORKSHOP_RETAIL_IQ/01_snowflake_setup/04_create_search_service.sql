@@ -1,3 +1,5 @@
+-- Create Cortex Search Services for semantic search over reviews and tickets
+-- Co-authored with CoCo
 -- ==================================================================================
 -- MODULE 3: CREATE CORTEX SEARCH SERVICES — RetailIQ Workshop
 -- ==================================================================================
@@ -66,10 +68,10 @@ DESCRIBE CORTEX SEARCH SERVICE RETAILIQ_TICKETS_SEARCH;
 -- VERIFICATION: Row Counts via CORTEX_SEARCH_DATA_SCAN
 -- ==================================================================================
 SELECT COUNT(*) AS REVIEWS_INDEXED
-FROM TABLE(RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH!CORTEX_SEARCH_DATA_SCAN());
+FROM TABLE(CORTEX_SEARCH_DATA_SCAN(SERVICE_NAME => 'RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH'));
 
 SELECT COUNT(*) AS TICKETS_INDEXED
-FROM TABLE(RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH!CORTEX_SEARCH_DATA_SCAN());
+FROM TABLE(CORTEX_SEARCH_DATA_SCAN(SERVICE_NAME => 'RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH'));
 
 -- ==================================================================================
 -- EXAMPLE TEST QUERIES (run these to validate the search services)
