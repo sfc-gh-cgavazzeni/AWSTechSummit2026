@@ -503,26 +503,42 @@ tuning loop:</p>
 exact validated SQL</p></li>
 </ol>
 <p><strong>4. Response metadata</strong> — Expand the response metadata
-panel (usually accessible via an info icon or “Details” section in the
-response). This shows:</p>
+panel (click the info icon or “Details” in the response). This shows a
+JSON object like:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;question_category&quot;</span><span class="fu">:</span> <span class="st">&quot;CLEAR_SQL&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;analyst_orchestration_path&quot;</span><span class="fu">:</span> <span class="st">&quot;regular_sqlgen&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cortex_search_retrieval&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;analyst_latency_ms&quot;</span><span class="fu">:</span> <span class="dv">4284</span><span class="fu">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;model_names&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;claude-sonnet-4-6&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;is_semantic_sql&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Key fields to highlight:</p>
 <ul>
-<li><p><strong>Confidence score</strong> — how confident Analyst is in
-the generated SQL</p></li>
-<li><p><strong>Matched Verified Query</strong> — if the answer was
-served from a VQ match (will show “None” for now since we have no VQs
-yet)</p></li>
-<li><p><strong>Semantic View used</strong> — which SV was
-selected</p></li>
-<li><p><strong>Tokens used</strong> — for cost tracking</p></li>
+<li><p><strong>question_category</strong> — How Analyst classified the
+question (e.g., <code>CLEAR_SQL</code> means it was clear enough to
+generate SQL directly)</p></li>
+<li><p><strong>analyst_orchestration_path</strong> — The internal
+routing used (<code>regular_sqlgen</code> = standard SQL generation,
+vs. VQ match when a Verified Query is used)</p></li>
+<li><p><strong>model_names</strong> — Which LLM model was used for
+generation</p></li>
+<li><p><strong>analyst_latency_ms</strong> — End-to-end latency in
+milliseconds (useful for performance monitoring)</p></li>
+<li><p><strong>cortex_search_retrieval</strong> — Whether any Cortex
+Search services were invoked (empty array = none)</p></li>
+<li><p><strong>is_semantic_sql</strong> — Whether the SQL was generated
+using the semantic layer</p></li>
 </ul>
 <blockquote>
 <p><strong>Purpose of metadata for production teams:</strong> Response
 metadata enables monitoring and observability in production deployments.
-You can track: (a) what % of questions are being answered by VQs vs
-generated on the fly, (b) which questions have low confidence and need
-VQs, (c) token cost per question for budget planning. This is how you
-build a tuning roadmap — focus VQ effort on the highest-volume,
-lowest-confidence questions first.</p>
+You can track: (a) which orchestration path is being used (VQ match
+vs. regular SQL generation), (b) which questions are classified as
+unclear and need VQs, (c) latency per question for SLA monitoring, (d)
+which models are being used. This is how you build a tuning roadmap —
+focus VQ effort on the highest-volume questions that take the
+<code>regular_sqlgen</code> path.</p>
 </blockquote>
 <h4 id="step-2b-deploy-the-tuned-semantic-view-via-sql-10-min">Step 2b —
 Deploy the Tuned Semantic View via SQL (10 min)</h4>
@@ -553,7 +569,7 @@ instructions, and <strong>AI_VERIFIED_QUERIES</strong>.</p>
 <ol start="5" type="1">
 <li>Verify the SV was created:</li>
 </ol>
-<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>SHOW SEMANTIC VIEWS <span class="kw">LIKE</span> <span class="st">&#39;RETAILIQ_SV&#39;</span> <span class="kw">IN</span> <span class="kw">SCHEMA</span> RETAILIQ_DB.ANALYTICS;</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>SHOW SEMANTIC VIEWS <span class="kw">LIKE</span> <span class="st">&#39;RETAILIQ_SV&#39;</span> <span class="kw">IN</span> <span class="kw">SCHEMA</span> RETAILIQ_DB.ANALYTICS;</span></code></pre></div>
 <h4 id="step-2c-test-with-the-tuned-semantic-view-5-min">Step 2c — Test
 with the Tuned Semantic View (5 min)</h4>
 <p>Ask the same question again with <code>RETAILIQ_SV</code> (the tuned
@@ -762,15 +778,15 @@ observability story for production deployments.</p>
 <h3 id="module-5-snowflake-managed-mcp-server-10-min">Module 5 —
 Snowflake Managed MCP Server <code>[10 min]</code></h3>
 <p>Run <code>01_snowflake_setup/06_create_mcp_server.sql</code>.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Copy the endpoint URL from the result — you&#39;ll need it for AWS</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Copy the endpoint URL from the result — you&#39;ll need it for AWS</span></span></code></pre></div>
 <p>Also run the PAT Token creation from
 <code>01_snowflake_setup/01_setup_environment.sql</code> (the section at
 the bottom).</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Save this token — it&#39;s shown only once!</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">ADD</span> PROGRAMMATIC <span class="kw">ACCESS</span> TOKEN retailiq_mcp_token </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  DAYS_TO_EXPIRY <span class="op">=</span> <span class="dv">7</span> </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  ROLE_RESTRICTION <span class="op">=</span> <span class="st">&#39;RETAILIQ_ROLE&#39;</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Save this token — it&#39;s shown only once!</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">ADD</span> PROGRAMMATIC <span class="kw">ACCESS</span> TOKEN retailiq_mcp_token </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  DAYS_TO_EXPIRY <span class="op">=</span> <span class="dv">7</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  ROLE_RESTRICTION <span class="op">=</span> <span class="st">&#39;RETAILIQ_ROLE&#39;</span>;</span></code></pre></div>
 <p><strong>What to save before the next module:</strong></p>
 <pre><code>MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/mcp/...
 PAT Token:         &lt;token value shown once&gt;
@@ -801,16 +817,16 @@ VPC</li>
 <li>Go to Outputs → <code>Ec2ConnectionURL</code> → click to open AWS
 CloudShell or use EC2 Instance Connect</li>
 </ol>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /opt/retailiq</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span>  <span class="co"># verify files are present</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">--version</span>  <span class="co"># should be 3.11+</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /opt/retailiq</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span>  <span class="co"># verify files are present</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">--version</span>  <span class="co"># should be 3.11+</span></span></code></pre></div>
 <hr />
 <h3 id="module-7-strands-agent-end-to-end-10-min">Module 7 — Strands
 Agent End-to-End <code>[10 min]</code></h3>
 <p>On the EC2 instance:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
 <p>You’ll see the welcome banner. Test with the sample questions from
 <code>help</code>:</p>
 <pre><code>&gt; What are the top 5 product categories by revenue this quarter?
@@ -878,12 +894,12 @@ Patterns &amp; Q&amp;A <code>[10 min]</code></h3>
 </table>
 <p><strong>Security pattern — lock down MCP to AgentCore IPs
 only:</strong></p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
 <p><strong>Seed Q&amp;A questions (for facilitators):</strong></p>
 <ul>
 <li><p><em>“Can I use this with Bedrock Knowledge Bases instead of

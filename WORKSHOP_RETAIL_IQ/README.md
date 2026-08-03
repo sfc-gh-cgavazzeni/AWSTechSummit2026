@@ -341,17 +341,34 @@ When Analyst returns the answer, click on the **SQL** panel to expand it. You'll
 
 4. Next time, Analyst matches the question pattern and reuses the exact validated SQL
 
-**4. Response metadata** — Expand the response metadata panel (usually accessible via an info icon or "Details" section in the response). This shows:
+**4. Response metadata** — Expand the response metadata panel (click the info icon or "Details" in the response). This shows a JSON object like:
 
-- **Confidence score** — how confident Analyst is in the generated SQL
+```json
+{
+  "question_category": "CLEAR_SQL",
+  "analyst_orchestration_path": "regular_sqlgen",
+  "cortex_search_retrieval": [],
+  "analyst_latency_ms": 4284,
+  "model_names": ["claude-sonnet-4-6"],
+  "is_semantic_sql": false
+}
+```
 
-- **Matched Verified Query** — if the answer was served from a VQ match (will show "None" for now since we have no VQs yet)
+Key fields to highlight:
 
-- **Semantic View used** — which SV was selected
+- **question_category** — How Analyst classified the question (e.g., `CLEAR_SQL` means it was clear enough to generate SQL directly)
 
-- **Tokens used** — for cost tracking
+- **analyst_orchestration_path** — The internal routing used (`regular_sqlgen` = standard SQL generation, vs. VQ match when a Verified Query is used)
 
-> **Purpose of metadata for production teams:** Response metadata enables monitoring and observability in production deployments. You can track: (a) what % of questions are being answered by VQs vs generated on the fly, (b) which questions have low confidence and need VQs, (c) token cost per question for budget planning. This is how you build a tuning roadmap — focus VQ effort on the highest-volume, lowest-confidence questions first.
+- **model_names** — Which LLM model was used for generation
+
+- **analyst_latency_ms** — End-to-end latency in milliseconds (useful for performance monitoring)
+
+- **cortex_search_retrieval** — Whether any Cortex Search services were invoked (empty array = none)
+
+- **is_semantic_sql** — Whether the SQL was generated using the semantic layer
+
+> **Purpose of metadata for production teams:** Response metadata enables monitoring and observability in production deployments. You can track: (a) which orchestration path is being used (VQ match vs. regular SQL generation), (b) which questions are classified as unclear and need VQs, (c) latency per question for SLA monitoring, (d) which models are being used. This is how you build a tuning roadmap — focus VQ effort on the highest-volume questions that take the `regular_sqlgen` path.
 
 #### Step 2b — Deploy the Tuned Semantic View via SQL (10 min)
 
