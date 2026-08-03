@@ -7,28 +7,39 @@
 -- ==================================================================================
 
 -- ==================================================================================
--- STEP 1: Drop Cortex Agent
+-- STEP 1: Drop Cortex Agent (owned by ACCOUNTADMIN)
 -- ==================================================================================
-USE ROLE RETAILIQ_ROLE;
+USE ROLE ACCOUNTADMIN;
 USE DATABASE RETAILIQ_DB;
 USE SCHEMA ANALYTICS;
 USE WAREHOUSE RETAILIQ_WH;
 
-DROP CORTEX AGENT IF EXISTS RETAILIQ_CORTEX_AGENT;
+DROP AGENT IF EXISTS RETAILIQ_CORTEX_AGENT;
 
 -- ==================================================================================
--- STEP 2: Drop Cortex Search Services
+-- STEP 2: Switch to RETAILIQ_ROLE for remaining objects
+-- ==================================================================================
+USE ROLE RETAILIQ_ROLE;
+
+-- ==================================================================================
+-- STEP 3: Drop Cortex Search Services
 -- ==================================================================================
 DROP CORTEX SEARCH SERVICE IF EXISTS RETAILIQ_REVIEWS_SEARCH;
 DROP CORTEX SEARCH SERVICE IF EXISTS RETAILIQ_TICKETS_SEARCH;
 
 -- ==================================================================================
--- STEP 3: Drop MCP Server
+-- STEP 4: Drop MCP Server
 -- ==================================================================================
 DROP MCP SERVER IF EXISTS RETAILIQ_MCP_SERVER;
 
 -- ==================================================================================
--- STEP 4: Drop Tables
+-- STEP 5: Drop Semantic Views
+-- ==================================================================================
+DROP SEMANTIC VIEW IF EXISTS RETAILIQ_SV;
+DROP SEMANTIC VIEW IF EXISTS RETAILIQ_SV_BASIC;
+
+-- ==================================================================================
+-- STEP 6: Drop Tables
 -- ==================================================================================
 DROP TABLE IF EXISTS ORDERS;
 DROP TABLE IF EXISTS PRODUCTS;
@@ -38,18 +49,18 @@ DROP TABLE IF EXISTS CUSTOMER_REVIEWS;
 DROP TABLE IF EXISTS SUPPORT_TICKETS;
 
 -- ==================================================================================
--- STEP 5: Drop Stage
+-- STEP 7: Drop Stage
 -- ==================================================================================
 DROP STAGE IF EXISTS RETAILIQ_STG;
 
 -- ==================================================================================
--- STEP 6: Drop Schema and Database
+-- STEP 8: Drop Schema and Database
 -- ==================================================================================
 DROP SCHEMA IF EXISTS RETAILIQ_DB.ANALYTICS;
 DROP DATABASE IF EXISTS RETAILIQ_DB;
 
 -- ==================================================================================
--- STEP 7: Drop Warehouse, Role, and User (requires ACCOUNTADMIN)
+-- STEP 9: Drop Warehouse, Role, and User (requires ACCOUNTADMIN)
 -- ==================================================================================
 USE ROLE ACCOUNTADMIN;
 
