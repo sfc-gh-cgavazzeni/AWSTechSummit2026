@@ -177,6 +177,8 @@ This creates:
 
 **Step — Download CSV files locally**
 
+> **Note:** If you have already cloned the Git repository to your local laptop, you already have the CSV files in the `00_data/` folder and can skip this download step.
+
 Before uploading data to the stage, you need to download all CSV files from the workspace to your local laptop. This is the easiest code-free way to get data into Snowflake.
 
 In the workspace file tree (left panel), expand the `00_data` folder. For each CSV file, click the **⋯** (three dots) menu next to the file name and select **Download**:
