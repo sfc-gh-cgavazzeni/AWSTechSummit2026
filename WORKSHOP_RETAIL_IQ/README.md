@@ -80,6 +80,57 @@ RetailIQ is an Italian multi-channel retailer with 50 stores across Italy plus a
 
 ## Step-by-Step Instructions
 
+### Getting Started — Create a Workspace from the Workshop GitHub Repo
+
+**What is a Snowflake Workspace?**
+
+A Workspace is a collaborative coding environment inside Snowsight where you can work with SQL files, notebooks, Streamlit apps, and dbt projects — all versioned and organized in folders. Workspaces can be connected to a Git repository, which means all the workshop files will be automatically available inside Snowflake without any manual uploads.
+
+For this workshop, we'll create a **Git Workspace** linked to the public GitHub repo containing all the SQL scripts, data, and configuration files.
+
+**Step 1 — Open the Projects menu**
+
+1. In Snowsight, click **Projects** in the left navigation sidebar
+2. At the top, make sure you are on the **Workspaces** tab
+
+![Workspaces menu](assets/workspaces1.jpg)
+
+**Step 2 — Create a new Git Workspace**
+
+1. Click the **"+"** button next to the search icon in the top toolbar
+2. In the dropdown, under **"Create new"**, select **"Git workspace"**
+
+![Create Git workspace option](assets/workspaces2.jpg)
+
+**Step 3 — Configure the Git repository connection**
+
+In the "Create workspace from Git repository" dialog:
+
+- **Repository URL**: enter `https://github.com/sfc-gh-cgavazzeni/AWSTechSummit2026/`
+- **Workspace name**: enter `AWSTechSummit2026` (or any name you prefer)
+- **API integration**: select your existing Git API integration (or click **"+ API Integration"** to create one)
+- **Authentication**: select **"Public repository"** (no authentication needed — the repo is public)
+- Click **"Create"**
+
+![Create workspace from Git repository](assets/workspaces3.jpg)
+
+> **Note:** Since we use "Public repository" authentication, the workspace is read-only (you can't push changes back). This is fine for the workshop — you'll run SQL files directly from the workspace.
+
+**Step 4 — Explore the workspace**
+
+After creation, you'll see the full workshop file tree in the left panel:
+
+![Workspace with all workshop files](assets/workspaces4.jpg)
+
+You can now open any SQL file directly from the workspace (it opens as a SQL worksheet), run it, and navigate between files. All workshop modules are organized in numbered folders:
+- `00_data/` — synthetic dataset and generator
+- `01_snowflake_setup/` — all SQL scripts (modules 0–5 + cleanup)
+- `02_semantic_view/` — Semantic View DDL
+- `03_aws_setup/` — CloudFormation + Strands agent
+- `04_slides/` — presentation deck
+
+---
+
 ### Module 0 — Environment Setup `[15 min]`
 
 > Run as **ACCOUNTADMIN**
@@ -100,14 +151,25 @@ This creates:
 
 **Step 1:** Upload the CSV files to the Snowflake stage.
 
-In Snowsight: `Catalog → Data → RETAILIQ_DB → ANALYTICS → Stages → RETAILIQ_STG`
-Click `+ Files` and upload:
-- `00_data/orders.csv`
-- `00_data/products.csv`
-- `00_data/customers.csv`
-- `00_data/stores.csv`
-- `00_data/customer_reviews.csv`
-- `00_data/support_tickets.csv`
+1. In the left sidebar, click **Catalog** → select **Explorer** from the dropdown menu:
+
+   ![Open Catalog Explorer](assets/loadinstage1.jpg)
+
+2. In the Explorer tree, navigate to **RETAILIQ_DB → ANALYTICS → Stages** and click on **RETAILIQ_STG**:
+
+   ![Navigate to RETAILIQ_STG stage](assets/loadinstage2.jpg)
+
+3. Click the **+ Files** button (top-right of the stage view). The **Upload Your Files** dialog appears. Verify that Schema is set to `RETAILIQ_DB.ANALYTICS` and Stage is `RETAILIQ_STG`. Drag and drop all 6 CSV files (or click **Browse** to select them), then click **Upload**:
+
+   ![Upload files dialog](assets/loadinstage3.jpg)
+
+Upload these files from the `00_data/` folder:
+- `orders.csv`
+- `products.csv`
+- `customers.csv`
+- `stores.csv`
+- `customer_reviews.csv`
+- `support_tickets.csv`
 
 **Step 2:** Run `01_snowflake_setup/02_create_tables.sql` to create tables.
 
