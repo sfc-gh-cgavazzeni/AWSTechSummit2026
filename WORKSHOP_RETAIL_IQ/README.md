@@ -70,8 +70,8 @@ RetailIQ is an Italian multi-channel retailer with 50 stores across Italy plus a
 | 1 | Load data & explore the schema | 10 min | `01_snowflake_setup/02_create_tables.sql` + `03_load_data.sql` |
 | 2 | Build & tune a Semantic View | 25 min | `02_semantic_view/retailiq_semantic_view.yaml` |
 | 3 | Cortex Search services | 10 min | `01_snowflake_setup/04_create_search_service.sql` |
-| 4 | Cortex Agent (native, in CoWork) | 15 min | `01_snowflake_setup/05_create_mcp_server.sql` |
-| 5 | MCP Server + PAT Token | 10 min | `01_snowflake_setup/05_create_mcp_server.sql` |
+| 4 | Cortex Agent (native, in CoWork) | 15 min | `01_snowflake_setup/05_create_cortex_agent.sql` |
+| 5 | MCP Server + PAT Token | 10 min | `01_snowflake_setup/06_create_mcp_server.sql` |
 | 6 | AWS Bedrock AgentCore setup | 15 min | `03_aws_setup/agentcore_cfn.yaml` |
 | 7 | Strands agent — end-to-end | 10 min | `03_aws_setup/retailiq_agent.py` |
 | 8 | Multi-turn demo + production patterns | 10 min | — |
@@ -272,35 +272,53 @@ This creates two search services:
 
 ---
 
-### Module 4 — Cortex Agent in CoWork `[15 min]`
+### Module 4 — Create Cortex Agent & Test in CoWork `[15 min]`
 
-Run `01_snowflake_setup/05_create_mcp_server.sql` — the `CREATE CORTEX AGENT` section.
+Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 services), we'll combine them into a single **Cortex Agent** that can reason across structured and unstructured data.
 
-This creates a native Snowflake agent that orchestrates both Analyst and Search.
+**Step 4a — Create the agent**
 
-**Open CoWork:** `AI & ML → CoWork → New Session` and select `RETAILIQ_CORTEX_AGENT`.
+Open a new SQL Worksheet, import `01_snowflake_setup/05_create_cortex_agent.sql`, and run it.
 
-**Demo questions (run in this order to show progressive complexity):**
+This creates `RETAILIQ_CORTEX_AGENT` with 3 tools:
+- `CORTEX_ANALYST_TOOL` → quantitative questions (generates SQL via the Semantic View)
+- `CORTEX_SEARCH_TOOL` (reviews) → qualitative insights from customer reviews
+- `CORTEX_SEARCH_TOOL` (tickets) → operational insights from support tickets
+
+The agent automatically decides which tool(s) to invoke based on the question.
+
+**Step 4b — Open CoWork and select the agent**
+
+1. In Snowsight, click the **AI & ML** icon (brain icon) in the left sidebar
+2. Select **CoWork** from the menu
+3. Click **"New Session"** (or the `+` button) to start a new conversation
+4. In the agent selector dropdown, choose **RETAILIQ_CORTEX_AGENT**
+
+**Step 4c — Demo questions (run in this order to show progressive complexity)**
 
 1. `"What are our top 5 categories by revenue this quarter?"`
-   → Analyst only, clean structured answer
+   → **Analyst only** — generates SQL, returns structured table
 
 2. `"What do customers say about our electronics products?"`
-   → Search only, qualitative insights
+   → **Search only** — semantic search over reviews, returns qualitative excerpts
 
 3. `"Which product categories have the highest return rates, and what are customers saying about those returns?"`
-   → **Both tools** — the agent reasons: first Analyst for return rates, then Search for context
+   → **Both tools** — the agent reasons: first Analyst for return rate data, then Search for customer verbatims about those categories
 
-4. `"Compare revenue performance by region — and are there regions with more complaints?"`
-   → Cross-tool reasoning, visible in the CoWork reasoning trace
+4. `"Compare revenue performance by region — and are there regions with more delivery complaints?"`
+   → **Cross-tool reasoning** — Analyst for regional revenue, Search for complaint patterns, agent synthesizes both
 
-> **Live demo moment:** Show the reasoning trace (tool selection, tool calls, synthesis). This is the "aha moment" for most SA architects.
+> **Live demo moment:** Show the **reasoning trace** panel (expand the tool calls). SAs will see:
+> - Which tool was selected and why
+> - The exact query sent to each tool
+> - How the agent synthesizes answers from multiple sources
+> - This is the debugging and observability story for production deployments.
 
 ---
 
 ### Module 5 — Snowflake Managed MCP Server `[10 min]`
 
-Run the MCP Server creation section of `01_snowflake_setup/05_create_mcp_server.sql`.
+Run `01_snowflake_setup/06_create_mcp_server.sql`.
 
 ```sql
 DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
@@ -425,7 +443,7 @@ ALTER USER retailiq_user SET NETWORK_POLICY = agentcore_only;
 
 ## Cleanup
 
-Run `01_snowflake_setup/06_cleanup.sql` to remove all Snowflake objects.
+Run `01_snowflake_setup/07_cleanup.sql` to remove all Snowflake objects.
 
 In AWS: delete the CloudFormation stack (`agentcore-retailiq-workshop`).
 
