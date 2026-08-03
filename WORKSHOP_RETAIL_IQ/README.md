@@ -276,16 +276,74 @@ This creates two search services:
 
 Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 services), we'll combine them into a single **Cortex Agent** that can reason across structured and unstructured data.
 
-**Step 4a — Create the agent**
+**Step 4a — Create the Cortex Agent from Snowsight UI**
 
-Open a new SQL Worksheet, import `01_snowflake_setup/05_create_cortex_agent.sql`, and run it.
+1. In Snowsight, click the **AI & ML** icon (brain icon) in the left sidebar
+2. Select **Cortex Agents** from the menu
 
-This creates `RETAILIQ_CORTEX_AGENT` with 3 tools:
-- `CORTEX_ANALYST_TOOL` → quantitative questions (generates SQL via the Semantic View)
-- `CORTEX_SEARCH_TOOL` (reviews) → qualitative insights from customer reviews
-- `CORTEX_SEARCH_TOOL` (tickets) → operational insights from support tickets
+   ![Cortex Agents menu](assets/agentsmenu.jpg)
 
-The agent automatically decides which tool(s) to invoke based on the question.
+3. Click **"+ Create Agent"** (top-right) to create a new agent
+4. In the "Create agent" dialog:
+   - **Database and schema**: select `RETAILIQ_DB` → `ANALYTICS`
+   - **Agent object name**: enter `RETAILIQ_CORTEX_AGENT`
+   - **Display name**: enter `RetailIQ Assistant`
+   - Click **"Create agent"**
+
+   ![Create Agent dialog](assets/newagent.jpg)
+
+5. You are now in the agent **Configuration** page. Click the **Tools** tab (under General | Instructions | **Tools** | Skills | MCP)
+
+   ![Agent Tools tab](assets/agent_tools.jpg)
+
+6. In the Tools panel, add the following:
+
+   **Query structured data** — click **"+ Add semantic view"**:
+   - Schema: select `RETAILIQ_DB.ANALYTICS`
+   - Semantic View: select `RETAILIQ_SV`
+   - Name: `RetailIQ_Analyst`
+   - Description: `Structured analytics tool for RetailIQ sales, orders, customers and stores data. Use for quantitative questions about revenue, conversion rates, order volumes, customer segments, regional performance, product categories, and time-series trends.`
+   - Warehouse: leave as "User's default"
+   - Query timeout: leave as `600`
+   - Click **"Add"**
+
+   ![Add Cortex Analyst tool](assets/analyst_tool.jpg)
+
+   **Search documents and unstructured data** — click **"+ Add search service"** twice:
+   - First service:
+     - Database: select `RETAILIQ_DB.ANALYTICS`
+     - Search service: select `RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH`
+     - Name: `SEARCHREVIEWS`
+     - Description: `Semantic search over customer reviews. Use for qualitative insights, sentiment analysis, product feedback, and understanding what customers say about their experiences.`
+     - Advanced configuration:
+       - Max results: `4`
+       - Target results: *(leave empty)*
+       - ID column: select `REVIEW_ID`
+       - Title column: select `PRODUCT_NAME`
+     - Click **"Add"**
+
+   ![Add Cortex Search tool - Reviews](assets/searchreviews_tool.jpg)
+
+   - Second service:
+     - Database: select `RETAILIQ_DB.ANALYTICS`
+     - Search service: select `RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH`
+     - Name: `SEARCHTICKETS`
+     - Description: `Semantic search over support tickets. Use for understanding common issues, complaints, return reasons, and service quality feedback.`
+     - Advanced configuration:
+       - Max results: `4`
+       - Target results: *(leave empty)*
+       - ID column: select `TICKET_ID`
+       - Title column: select `CATEGORY`
+     - Click **"Add"**
+
+   ![Add Cortex Search tool - Tickets](assets/searchtickets_tool.jpg)
+
+   *(Leave Web search OFF, Code Execution tool ON by default)*
+
+7. Click the **General** tab and set the **Query Warehouse** to `RETAILIQ_WH`
+8. Click **"Save"** to save the agent configuration
+
+> **Talking point:** Notice how tool descriptions are critical — they guide the agent's reasoning about WHICH tool to call for each question. Good descriptions = accurate tool selection.
 
 **Step 4b — Open CoWork and select the agent**
 
