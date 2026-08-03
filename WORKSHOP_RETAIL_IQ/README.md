@@ -139,16 +139,25 @@ A Semantic View is a **business vocabulary layer** that sits between your raw ta
 - **Synonyms** so the AI understands "revenue", "fatturato", "sales" all mean the same thing
 - **Verified Queries** — pre-validated SQL for your most important KPIs
 
-**The key insight for SA architects:** *Without a Semantic View, the LLM must guess the schema semantics. With it, you control the vocabulary and the AI always generates correct SQL. This is the difference between a demo and a production deployment.*
+**The key insight for SA architects:** *A Semantic View gives you full control over the vocabulary and logic the AI uses. The difference between a bare auto-generated SV and a tuned one with verified queries is the difference between a demo and a production deployment.*
 
-#### Step 2a — Without Semantic View (5 min)
+#### Step 2a — Auto-Generated (Minimal) Semantic View (5 min)
 
-Test Cortex Analyst with NO Semantic View yet. Ask:
+Cortex Analyst always requires a Semantic View — there's no "zero SV" mode. But the quality of the SV determines the quality of the answers. Let's start with a bare-bones auto-generated one to see the gap.
+
+1. Navigate to `AI & ML → Cortex Analyst → Create New`
+2. Select **Generate from tables** (not "Upload YAML")
+3. Pick all 4 tables: `ORDERS`, `PRODUCTS`, `CUSTOMERS`, `STORES`
+4. Let the UI auto-generate joins and columns — accept defaults and save as `RETAILIQ_SV_BASIC`
+
+Now ask:
 > "What is the revenue by region for this year?"
 
-Observe: the model may hallucinate column names, join incorrectly, or miss the `WHERE status='Completed'` filter.
+Observe: the auto-generated SV has no concept of "revenue" (it doesn't know to filter `status='Completed'`), "region" is ambiguous (customer region? store region?), and there are no synonyms. The generated SQL is likely wrong or imprecise.
 
-#### Step 2b — Create the Semantic View (10 min)
+#### Step 2b — Upload the Tuned Semantic View (10 min)
+
+Now let's replace it with the hand-crafted SV that has metrics, synonyms, and verified queries.
 
 1. Navigate to `AI & ML → Cortex Analyst → Create New`
 2. Select `Upload your YAML file`
@@ -156,20 +165,23 @@ Observe: the model may hallucinate column names, join incorrectly, or miss the `
 4. Select `RETAILIQ_DB → ANALYTICS` then `RETAILIQ_STG` stage
 5. Click `Upload` then `Save`
 
-> While it processes, walk through the YAML structure: tables, relationships, dimensions, metrics, verified_queries.
+> While it processes, walk through the YAML structure: tables, relationships, dimensions, metrics, verified_queries. Highlight what the auto-generated SV was missing.
 
-#### Step 2c — Test with Semantic View (5 min)
+#### Step 2c — Test with the Tuned Semantic View (5 min)
 
-Ask the same question again. Compare the generated SQL.
+Ask the same question again with `RETAILIQ_SV` (the tuned one). Compare:
+- The SQL now correctly uses `SUM(total_amount) WHERE status='Completed'`
+- "Region" resolves unambiguously to `customers.region`
+- Synonyms mean "fatturato", "revenue", "sales" all work
 
-#### Step 2d — Tune: Add a Verified Query (5 min)
+#### Step 2d — Tune Further: Add a Verified Query (5 min)
 
 In the Analyst UI, click on the Semantic View and add a new Verified Query:
 - Question: "What is our return rate by product category?"
 - Use the SQL from `retailiq_semantic_view.yaml` as a reference
-- Save and re-test
+- Save and re-test — the VQ guarantees the exact SQL you validated
 
-**Takeaway:** Verified Queries are the single most impactful tuning mechanism. They guarantee correct SQL for your most important business questions.
+**Takeaway:** Verified Queries are the single most impactful tuning mechanism. They guarantee correct SQL for your most important business questions. Start with auto-generate to get a baseline, then iteratively add metrics, synonyms, and VQs.
 
 ---
 

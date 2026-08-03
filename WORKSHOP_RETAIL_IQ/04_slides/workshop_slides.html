@@ -511,13 +511,13 @@
         </div>
       </div>
       <div class="col">
-        <h3>Without vs with Semantic View</h3>
+        <h3>Auto-generated SV vs Tuned SV</h3>
         <div class="vq-before">
-          <div class="vq-label">Without Semantic View</div>
-          <code>-- LLM guesses schema...<br>SELECT store_id, SUM(amount)<br>FROM orders GROUP BY 1<br><br>-- Wrong: uses store instead of customer<br>-- region; omits Completed filter</code>
+          <div class="vq-label">Auto-generated (minimal) Semantic View</div>
+          <code>-- No metrics, no synonyms, no VQs<br>SELECT store_id, SUM(amount)<br>FROM orders GROUP BY 1<br><br>-- Wrong: uses store instead of customer<br>-- region; omits Completed filter</code>
         </div>
         <div class="vq-after">
-          <div class="vq-label">With Semantic View + Verified Queries</div>
+          <div class="vq-label">Tuned SV with metrics + Verified Queries</div>
           <code>SELECT c.region,<br>  SUM(o.total_amount) AS revenue<br>FROM orders o<br>JOIN customers c ON o.customer_id=c.customer_id<br>WHERE o.status = 'Completed'<br>  AND YEAR(o.order_date) = YEAR(CURRENT_DATE())<br>GROUP BY 1 ORDER BY 2 DESC</code>
         </div>
         <div class="talking-point">
