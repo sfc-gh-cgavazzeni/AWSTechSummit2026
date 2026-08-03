@@ -366,9 +366,7 @@ WHERE o.status = ''Completed''
 GROUP BY 1
 ORDER BY 2 DESC'
     )
-  )
-
-  COMMENT = 'Semantic View for RetailIQ retail analytics — covers sales performance, customer behavior, product analytics, and store operations across Italian regions.';
+  );
 
 -- ==================================================================================
 -- VERIFY
