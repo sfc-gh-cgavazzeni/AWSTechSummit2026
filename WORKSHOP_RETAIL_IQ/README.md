@@ -113,32 +113,11 @@ A Workspace is a collaborative coding environment inside Snowsight where you can
 
 For this workshop, we'll create a **Git Workspace** linked to the public GitHub repo containing all the SQL scripts, data, and configuration files.
 
-**Pre-requisite — Create a Git API Integration**
-
-Before creating a Git Workspace, Snowflake needs an **API Integration** that allows it to connect to public GitHub repositories. This is a one-time setup per account.
-
-1. In Snowsight, open the default workspace: click **Projects** in the left sidebar, then open any existing workspace (e.g., your default workspace) or create a blank one.
-
-2. Click the **"+"** button at the top of the workspace to open a new **SQL worksheet**.
-
-3. Run the following SQL as `ACCOUNTADMIN`:
-
-```sql
-USE ROLE ACCOUNTADMIN;
-
-CREATE OR REPLACE API INTEGRATION MY_GIT_API_INTEGRATION
-  API_PROVIDER = git_https_api
-  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-cgavazzeni')
-  ENABLED = TRUE;
-```
-
-This integration authorizes Snowflake to connect to the workshop GitHub repository. Once created, it will be available in the Git Workspace creation dialog as a selectable integration.
-
 **Step 1 — Open the Projects menu**
 
 1. In Snowsight, click **Projects** in the left navigation sidebar
 
-2. At the top, make sure you are on the **Workspaces** tab
+2. Select **Workspaces** from the submenu
 
 ![Workspaces menu](assets/workspaces1.jpg)
 
@@ -152,19 +131,19 @@ This integration authorizes Snowflake to connect to the workshop GitHub reposito
 
 **Step 3 — Configure the Git repository connection**
 
-In the "Create workspace from Git repository" dialog:
+The "Create workspace from Git repository" dialog opens. Fill in the fields as follows:
+
+![Create workspace from Git repository](assets/workspaces5.jpg)
 
 - **Repository URL**: enter `https://github.com/sfc-gh-cgavazzeni/AWSTechSummit2026/`
 
 - **Workspace name**: enter `AWSTechSummit2026` (or any name you prefer)
 
-- **API integration**: select your existing Git API integration (or click **"+ API Integration"** to create one)
+- **API integration**: If you already have a Git API integration, select it from the dropdown. If not, click the **"+ API Integration"** button to create one directly from this dialog — no SQL required. Give it a name (e.g., `MY_GIT_API_INTEGRATION`) and Snowflake will create it for you.
 
 - **Authentication**: select **"Public repository"** (no authentication needed — the repo is public)
 
 - Click **"Create"**
-
-![Create workspace from Git repository](assets/workspaces3.jpg)
 
 > **Note:** Since we use "Public repository" authentication, the workspace is read-only (you can't push changes back). This is fine for the workshop — you'll run SQL files directly from the workspace.
 
@@ -172,7 +151,7 @@ In the "Create workspace from Git repository" dialog:
 
 After creation, you'll see the full workshop file tree in the left panel:
 
-![Workspace with all workshop files](assets/workspaces4.jpg)
+![Workspace with all workshop files](assets/workspaces6.jpg)
 
 You can now open any SQL file directly from the workspace (it opens as a SQL worksheet), run it, and navigate between files. All workshop modules are organized in numbered folders:
 
