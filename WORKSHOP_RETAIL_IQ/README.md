@@ -113,6 +113,27 @@ A Workspace is a collaborative coding environment inside Snowsight where you can
 
 For this workshop, we'll create a **Git Workspace** linked to the public GitHub repo containing all the SQL scripts, data, and configuration files.
 
+**Pre-requisite — Create a Git API Integration**
+
+Before creating a Git Workspace, Snowflake needs an **API Integration** that allows it to connect to public GitHub repositories. This is a one-time setup per account.
+
+1. In Snowsight, open the default workspace: click **Projects** in the left sidebar, then open any existing workspace (e.g., your default workspace) or create a blank one.
+
+2. Click the **"+"** button at the top of the workspace to open a new **SQL worksheet**.
+
+3. Run the following SQL as `ACCOUNTADMIN`:
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+CREATE OR REPLACE API INTEGRATION MY_GIT_API_INTEGRATION
+  API_PROVIDER = git_https_api
+  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-cgavazzeni')
+  ENABLED = TRUE;
+```
+
+This integration authorizes Snowflake to connect to the workshop GitHub repository. Once created, it will be available in the Git Workspace creation dialog as a selectable integration.
+
 **Step 1 — Open the Projects menu**
 
 1. In Snowsight, click **Projects** in the left navigation sidebar
@@ -185,7 +206,7 @@ This creates:
 
 > **Presenter tip:** While this runs, explain the Snowflake object hierarchy to the audience.
 
-**Step — Download CSV files locally**
+**Step — Download CSV files locally (ONLY IF YOU DIDN'T CLONE THE GIT ALSO LOCALLY)**
 
 > **Note:** If you have already cloned the Git repository to your local laptop, you already have the CSV files in the `00_data/` folder and can skip this download step.
 
@@ -310,6 +331,8 @@ no synonyms — just the foundation.
 2. Select **Cortex Analyst** from the menu
 
 3. You'll see a list of available Semantic Views — click on **RETAILIQ_SV_BASIC** (the one CoCo just created)
+
+   On the left panel of the Semantic View editor, you can view and edit the different components of the SV: **Tables**, **Relationships**, **Facts**, **Dimensions**, and **Metrics**. Notice how CoCo automatically recognized join keys between tables, identified numeric columns as potential facts/metrics, and categorized text/date columns as dimensions. This is a solid starting point, but it can be further improved by adding business-specific metric definitions, synonyms, filters, and verified queries — which is exactly what we'll do in Step 2b.
 
 4. Click the **Playground** tab at the top to open the interactive chat interface
 
@@ -491,6 +514,55 @@ FROM TABLE(
 ```
 
 Notice how the results match **semantically** — for example, "delivery problems" finds reviews mentioning slow shipping, lost packages, or courier issues in Sicily/Naples, even if the exact phrase "delivery problems" never appears. This is the power of hybrid search (BM25 + vector embeddings) vs. pure keyword matching.
+
+**Alternative: Test with Python**
+
+If you prefer Python, open a **Python worksheet** (click "+" → "Python Worksheet") and run:
+
+```python
+import json
+from snowflake.snowpark.context import get_active_session
+
+session = get_active_session()
+
+# Search customer reviews
+results = session.sql("""
+    SELECT *
+    FROM TABLE(
+      SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+        'RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH',
+        '{
+          "query": "delivery problems in southern Italy",
+          "columns": ["review_text", "product_name", "rating"],
+          "limit": 5
+        }'
+      )
+    )
+""").collect()
+
+for row in results:
+    print(f"[Rating: {row['RATING']}] {row['PRODUCT_NAME']}")
+    print(f"  {row['REVIEW_TEXT'][:120]}...")
+    print()
+
+# Search support tickets
+tickets = session.sql("""
+    SELECT *
+    FROM TABLE(
+      SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+        'RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH',
+        '{
+          "query": "refund not processed",
+          "columns": ["ticket_text", "category", "status"],
+          "limit": 5
+        }'
+      )
+    )
+""").collect()
+
+for row in tickets:
+    print(f"[{row['CATEGORY']} - {row['STATUS']}] {row['TICKET_TEXT'][:120]}...")
+```
 
 **Key message for SA architects:** Cortex Search is a **hybrid search** (full-text + vector embedding) with no infrastructure to manage. Zero vector database to deploy, zero embedding pipeline to maintain.
 
