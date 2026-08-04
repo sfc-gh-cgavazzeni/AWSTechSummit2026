@@ -211,17 +211,21 @@ Save them to a known folder on your laptop (e.g., `Downloads/retailiq_data/`). Y
 
 **Step 1:** Upload the CSV files to the Snowflake stage.
 
-1. In the left sidebar, click **Catalog** → select **Explorer** from the dropdown menu:
+1. In the left sidebar, click **Catalog** → select **Database Explorer** from the dropdown menu. You'll see both the workspace file tree (with all CSV files visible) and the Catalog navigation:
 
-   ![Open Catalog Explorer](assets/loadinstage1.jpg)
+   ![Open Catalog Database Explorer](assets/loadinstage1.jpg)
 
-2. In the Explorer tree, navigate to **RETAILIQ_DB → ANALYTICS → Stages** and click on **RETAILIQ_STG**:
+2. In the Database Explorer, navigate to **RETAILIQ_DB → ANALYTICS → Stages** and click on **RETAILIQ_STG**:
 
    ![Navigate to RETAILIQ_STG stage](assets/loadinstage2.jpg)
 
-3. Click the **+ Files** button (top-right of the stage view). The **Upload Your Files** dialog appears. Verify that Schema is set to `RETAILIQ_DB.ANALYTICS` and Stage is `RETAILIQ_STG`. Drag and drop all 6 CSV files (or click **Browse** to select them), then click **Upload**:
+3. Clicking on **RETAILIQ_STG** opens the stage detail page. You'll see the stage metadata (Internal Stage, owner RETAILIQ_ROLE) and tabs for Stage Files, Stage Details, and Lineage. Click the **+ Files** button in the top-right corner:
 
-   ![Upload files dialog](assets/loadinstage3.jpg)
+   ![Stage detail page with + Files button](assets/loadinstage3.jpg)
+
+4. The **Upload Your Files** dialog appears. Verify that Schema is set to `RETAILIQ_DB.ANALYTICS` and Stage is `RETAILIQ_STG`. Drag and drop all 6 CSV files from your local folder (or click **Browse** to select them), then click **Upload**:
+
+   ![Upload files dialog](assets/loadinstage4.jpg)
 
 Upload these files from the `00_data/` folder:
 
