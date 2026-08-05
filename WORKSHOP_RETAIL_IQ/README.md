@@ -279,13 +279,12 @@ A Semantic View is a **business vocabulary layer** that sits between your raw ta
 
 #### Step 2a — Build a Basic Semantic View with Cortex Code (10 min)
 
-Cortex Analyst always requires a Semantic View — there's no "zero SV" mode. But rather than hand-writing YAML from scratch, we'll use **Cortex Code** (CoCo) and its **semantic-view skill** to scaffold a first version automatically from the schema.
+Cortex Analyst always requires a Semantic View. You can build one in several ways: manually selecting tables, joins, and metrics from scratch in the UI; importing an existing dashboard from **Power BI**, **Tableau**, or any compatible **Open Semantic Interchange (OSI)** file; or using AI assistance. In this workshop, we'll use **Cortex Code** (CoCo) and its **semantic-view skill** to scaffold a first version automatically from the schema.
 
 **Open Cortex Code** — after running `03_load_data.sql` and verifying your row counts, look at the bottom-right corner of the Snowsight workspace. You'll see the **"Open or move CoCo"** button (the blue/green sparkle icon). Click it to open the CoCo chat panel.
 
 <img src="assets/coco1.jpg" width="932" height="403">
 
-*After running the data load script, your workspace shows the verification results (row counts). Notice the "Open or move CoCo" button in the bottom-right corner — click it to launch Cortex Code.*
 
 Once the CoCo chat panel opens, type the following prompt:
 
@@ -409,7 +408,7 @@ Now let's replace the basic SV with the hand-crafted one that has metrics, synon
 
 4. Run the entire script — it executes a single `CREATE OR REPLACE SEMANTIC VIEW` DDL statement that defines all tables, relationships, dimensions, facts, metrics, custom instructions, and verified queries in one go.
 
-> While it runs, walk through the DDL structure with the audience. Highlight what the basic CoCo-generated SV was missing: **metric definitions** (like `total_revenue = SUM(...) WHERE status='Completed'`), **synonyms** (Italian + English), **IS_ENUM** with sample_values, **AI_SQL_GENERATION** custom instructions, and **AI_VERIFIED_QUERIES**.
+
 
 5. Verify the SV was created:
 
@@ -522,54 +521,31 @@ FROM TABLE(
 
 Notice how the results match **semantically** — for example, "delivery problems" finds reviews mentioning slow shipping, lost packages, or courier issues in Sicily/Naples, even if the exact phrase "delivery problems" never appears. This is the power of hybrid search (BM25 + vector embeddings) vs. pure keyword matching.
 
-**Alternative: Test with Python**
+**Alternative: Test with Python (Snowpark)**
 
-If you prefer Python, open **`04b_test_search_service.py`** from the same folder in your workspace and run it:
+If you prefer Python, open **`04b_test_search_service.py`** from the same folder in your workspace and run it. This version uses `SEARCH_PREVIEW` via Snowpark SQL.
 
-```python
-import json
-from snowflake.snowpark.context import get_active_session
+**Alternative: Test with REST API (recommended for AWS SAs)**
 
-session = get_active_session()
+For a more realistic integration perspective, use the REST API — this is the same interface that external clients (AWS Bedrock AgentCore, Strands agents, or any MCP client) use to query Cortex Search programmatically.
 
-# Search customer reviews
-results = session.sql("""
-    SELECT *
-    FROM TABLE(
-      SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
-        'RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH',
-        '{
-          "query": "delivery problems in southern Italy",
-          "columns": ["review_text", "product_name", "rating"],
-          "limit": 5
-        }'
-      )
-    )
-""").collect()
+Open **`04b_test_search_service_rest.py`** or **`04b_test_search_service_rest.sh`** from your workspace. These scripts call the Cortex Search REST endpoint directly using a PAT token:
 
-for row in results:
-    print(f"[Rating: {row['RATING']}] {row['PRODUCT_NAME']}")
-    print(f"  {row['REVIEW_TEXT'][:120]}...")
-    print()
-
-# Search support tickets
-tickets = session.sql("""
-    SELECT *
-    FROM TABLE(
-      SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
-        'RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH',
-        '{
-          "query": "refund not processed",
-          "columns": ["ticket_text", "category", "status"],
-          "limit": 5
-        }'
-      )
-    )
-""").collect()
-
-for row in tickets:
-    print(f"[{row['CATEGORY']} - {row['STATUS']}] {row['TICKET_TEXT'][:120]}...")
+```bash
+curl -s "${ACCOUNT_URL}/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/cortex-search-services/RETAILIQ_REVIEWS_SEARCH:query" \
+  --header "Authorization: Bearer ${PAT}" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "query": "delivery problems in southern Italy",
+    "columns": ["REVIEW_TEXT", "PRODUCT_NAME", "RATING"],
+    "filter": {"@lte": {"RATING": 2}},
+    "limit": 5
+  }'
 ```
+
+Notice how the REST API supports **filters** (e.g., `@lte`, `@eq`, `@contains`) to combine semantic search with structured attribute filtering — all in one call, no post-processing needed.
+
+> To generate a PAT: User menu → My Profile → Programmatic Access Tokens → Generate
 
 **Key message for SA architects:** Cortex Search is a **hybrid search** (full-text + vector embedding) with no infrastructure to manage. Zero vector database to deploy, zero embedding pipeline to maintain.
 
@@ -649,6 +625,8 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 8. Click **"Save"** to save the agent configuration
 
+9. After saving, click **"Add to Snowflake CoWork"** to make the agent available in the CoWork conversational interface
+
 
 **Step 4b — Open CoWork and select the agent**
 
@@ -691,7 +669,7 @@ DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
 -- Copy the endpoint URL from the result — you'll need it for AWS
 ```
 
-Also run the PAT Token creation from `01_snowflake_setup/01_setup_environment.sql` (the section at the bottom).
+Also run the PAT Token creation section in the same script (`03_aws_setup/01_create_mcp_server.sql`):
 
 ```sql
 -- Save this token — it's shown only once!

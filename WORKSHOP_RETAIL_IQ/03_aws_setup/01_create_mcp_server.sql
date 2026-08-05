@@ -45,16 +45,30 @@ DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
 -- ==================================================================================
 -- PAT TOKEN CREATION (run as ACCOUNTADMIN)
 -- ==================================================================================
--- IMPORTANT: Switch to ACCOUNTADMIN to create the PAT token.
--- The token value is displayed ONLY ONCE — save it immediately!
---
--- USE ROLE ACCOUNTADMIN;
--- ALTER USER RETAILIQ_USER
---     ADD PROGRAMMATIC ACCESS TOKEN RETAILIQ_MCP_TOKEN
---     DAYS_TO_EXPIRY = 7
---     ROLE_RESTRICTION = 'RETAILIQ_ROLE';
---
--- Save the output token value for the next module (AWS AgentCore).
+-- IMPORTANT: The token value is displayed ONLY ONCE — save it immediately!
+
+USE ROLE ACCOUNTADMIN;
+
+ALTER USER RETAILIQ_USER
+    ADD PROGRAMMATIC ACCESS TOKEN RETAILIQ_MCP_TOKEN
+    DAYS_TO_EXPIRY = 7
+    ROLE_RESTRICTION = 'RETAILIQ_ROLE';
+
+-- Retrieve the MCP Server endpoint URL:
+DESCRIBE MCP SERVER RETAILIQ_DB.ANALYTICS.RETAILIQ_MCP_SERVER;
+
+-- ==================================================================================
+-- NETWORK POLICY (OPTIONAL — for production use)
+-- ==================================================================================
+-- Uncomment and customize the following for production deployments to restrict
+-- access to known IP ranges (e.g., AWS VPC NAT Gateway IPs).
+
+-- CREATE NETWORK POLICY IF NOT EXISTS RETAILIQ_NETWORK_POLICY
+--     ALLOWED_IP_LIST = ('0.0.0.0/0')  -- Replace with your CIDR ranges
+--     BLOCKED_IP_LIST = ()
+--     COMMENT = 'Network policy for RetailIQ MCP access';
+
+-- ALTER USER RETAILIQ_USER SET NETWORK_POLICY = RETAILIQ_NETWORK_POLICY;
 
 -- ==================================================================================
 -- WHAT TO SAVE BEFORE MOVING TO AWS
