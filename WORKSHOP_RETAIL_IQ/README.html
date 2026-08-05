@@ -397,7 +397,7 @@ Secrets Manager secrets</p></li>
 <td>5</td>
 <td>MCP Server + PAT Token</td>
 <td>10 min</td>
-<td><code>01_snowflake_setup/06_create_mcp_server.sql</code></td>
+<td><code>03_aws_setup/01_create_mcp_server.sql</code></td>
 </tr>
 <tr>
 <td>6</td>
@@ -1190,7 +1190,9 @@ observability story for production deployments.</p>
 <hr />
 <h3 id="module-5-snowflake-managed-mcp-server-10-min">Module 5 —
 Snowflake Managed MCP Server <code>[10 min]</code></h3>
-<p>Run <code>01_snowflake_setup/06_create_mcp_server.sql</code>.</p>
+<p>In your workspace, navigate to
+<code>WORKSHOP_RETAIL_IQ &gt; 03_aws_setup</code> and open
+<strong><code>01_create_mcp_server.sql</code></strong>.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Copy the endpoint URL from the result — you&#39;ll need it for AWS</span></span></code></pre></div>
 <p>Also run the PAT Token creation from

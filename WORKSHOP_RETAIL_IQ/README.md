@@ -96,7 +96,7 @@ RetailIQ is an Italian multi-channel retailer with 50 stores across Italy plus a
 | 2 | Build & tune a Semantic View | 25 min | `02_semantic_view/retailiq_semantic_view.yaml` |
 | 3 | Cortex Search services | 10 min | `01_snowflake_setup/04_create_search_service.sql` |
 | 4 | Cortex Agent (native, in CoWork) | 15 min | `01_snowflake_setup/05_create_cortex_agent.sql` |
-| 5 | MCP Server + PAT Token | 10 min | `01_snowflake_setup/06_create_mcp_server.sql` |
+| 5 | MCP Server + PAT Token | 10 min | `03_aws_setup/01_create_mcp_server.sql` |
 | 6 | AWS Bedrock AgentCore setup | 15 min | `03_aws_setup/agentcore_cfn.yaml` |
 | 7 | Strands agent — end-to-end | 10 min | `03_aws_setup/retailiq_agent.py` |
 | 8 | Multi-turn demo + production patterns | 10 min | — |
@@ -684,7 +684,7 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 ### Module 5 — Snowflake Managed MCP Server `[10 min]`
 
-Run `01_snowflake_setup/06_create_mcp_server.sql`.
+In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and open **`01_create_mcp_server.sql`**.
 
 ```sql
 DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
