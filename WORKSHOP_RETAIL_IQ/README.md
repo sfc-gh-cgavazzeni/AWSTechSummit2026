@@ -341,7 +341,6 @@ When CoCo finishes generating the Semantic View, it will prompt you to **save it
 
 Observe the gap: the basic SV has no concept of "revenue" as a metric (it doesn't know to filter `status='Completed'`), "region" is ambiguous (customer region? store region?), and there are no synonyms or verified queries. The generated SQL may be wrong or imprecise.
 
-> **Talking point for SAs:** *CoCo got us from zero to a working Semantic View in 30 seconds — no YAML authoring, no documentation lookup. But a basic auto-scaffolded SV is like auto-generated API docs: technically correct but not useful for production. The real value comes from tuning. However, if you provide CoCo with richer context — for example, an Excel file describing your data model with metric definitions, join keys, synonyms, and business descriptions — you can get a production-quality Semantic View even on the first shot. What really makes the difference is the context you provide.*
 
 #### Step 2a-bis — Understand How Cortex Analyst Processes a Question (5 min)
 
@@ -476,7 +475,6 @@ Cortex Search is Snowflake's fully managed search service that combines **full-t
 
 **Where is the vector database?** There is no external vector database. Snowflake stores the vector index as an internal optimized structure, co-located with your data. This means: governance (RBAC, masking) applies to search results, no data exfiltration risk, and zero operational overhead.
 
-> **Talking point for SAs:** Cortex Search eliminates the entire retrieval infrastructure stack. One SQL statement replaces: embedding model deployment, vector store provisioning, data sync pipelines, and hybrid search orchestration.
 
 ---
 
@@ -651,7 +649,6 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 8. Click **"Save"** to save the agent configuration
 
-> **Talking point:** Notice how tool descriptions are critical — they guide the agent's reasoning about WHICH tool to call for each question. Good descriptions = accurate tool selection.
 
 **Step 4b — Open CoWork and select the agent**
 

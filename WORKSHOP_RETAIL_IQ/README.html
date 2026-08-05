@@ -726,18 +726,6 @@ interactive chat interface</p></li>
 (it doesn’t know to filter <code>status=&#39;Completed&#39;</code>), “region” is
 ambiguous (customer region? store region?), and there are no synonyms or
 verified queries. The generated SQL may be wrong or imprecise.</p>
-<blockquote>
-<p><strong>Talking point for SAs:</strong> <em>CoCo got us from zero to
-a working Semantic View in 30 seconds — no YAML authoring, no
-documentation lookup. But a basic auto-scaffolded SV is like
-auto-generated API docs: technically correct but not useful for
-production. The real value comes from tuning. However, if you provide
-CoCo with richer context — for example, an Excel file describing your
-data model with metric definitions, join keys, synonyms, and business
-descriptions — you can get a production-quality Semantic View even on
-the first shot. What really makes the difference is the context you
-provide.</em></p>
-</blockquote>
 <h4 id="step-2a-bis-understand-how-cortex-analyst-processes-a-question-5-min">Step
 2a-bis — Understand How Cortex Analyst Processes a Question (5 min)</h4>
 <p>Now that we have a basic SV, let’s use it to understand <strong>how
@@ -953,12 +941,6 @@ vector database. Snowflake stores the vector index as an internal
 optimized structure, co-located with your data. This means: governance
 (RBAC, masking) applies to search results, no data exfiltration risk,
 and zero operational overhead.</p>
-<blockquote>
-<p><strong>Talking point for SAs:</strong> Cortex Search eliminates the
-entire retrieval infrastructure stack. One SQL statement replaces:
-embedding model deployment, vector store provisioning, data sync
-pipelines, and hybrid search orchestration.</p>
-</blockquote>
 <hr />
 <p>Run <code>01_snowflake_setup/04_create_search_service.sql</code>.</p>
 <p>This creates two search services:</p>
@@ -1166,11 +1148,6 @@ Warehouse</strong> to <code>RETAILIQ_WH</code></p></li>
 <li><p>Click <strong>“Save”</strong> to save the agent
 configuration</p></li>
 </ol>
-<blockquote>
-<p><strong>Talking point:</strong> Notice how tool descriptions are
-critical — they guide the agent’s reasoning about WHICH tool to call for
-each question. Good descriptions = accurate tool selection.</p>
-</blockquote>
 <p><strong>Step 4b — Open CoWork and select the agent</strong></p>
 <ol type="1">
 <li><p>In Snowsight, click the <strong>AI &amp; ML</strong> icon (brain
