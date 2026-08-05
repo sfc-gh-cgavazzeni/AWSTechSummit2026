@@ -171,7 +171,7 @@ You can now open any SQL file directly from the workspace (it opens as a SQL wor
 
 > Run as **ACCOUNTADMIN**
 
-Open `01_snowflake_setup/01_setup_environment.sql` in a Snowflake SQL worksheet and run it top to bottom.
+In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 01_snowflake_setup` and click on **`01_setup_environment.sql`** to open it. Run it top to bottom.
 
 This creates:
 
@@ -407,7 +407,7 @@ Now let's replace the basic SV with the hand-crafted one that has metrics, synon
 
 2. In the file explorer, navigate to `WORKSHOP_RETAIL_IQ > 02_semantic_view` and click on **`create_semantic_view.sql`** to open it directly — the file is already in your workspace from the Git repo
 
-4. Run the entire worksheet — it executes a single `CREATE OR REPLACE SEMANTIC VIEW` DDL statement that defines all tables, relationships, dimensions, facts, metrics, custom instructions, and verified queries in one go.
+4. Run the entire script — it executes a single `CREATE OR REPLACE SEMANTIC VIEW` DDL statement that defines all tables, relationships, dimensions, facts, metrics, custom instructions, and verified queries in one go.
 
 > While it runs, walk through the DDL structure with the audience. Highlight what the basic CoCo-generated SV was missing: **metric definitions** (like `total_revenue = SUM(...) WHERE status='Completed'`), **synonyms** (Italian + English), **IS_ENUM** with sample_values, **AI_SQL_GENERATION** custom instructions, and **AI_VERIFIED_QUERIES**.
 
@@ -488,7 +488,7 @@ This creates two search services:
 
 **Test the search services:**
 
-Open a new SQL worksheet and run these queries to see semantic matching in action:
+In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 01_snowflake_setup` and open **`04b_test_search_service.sql`** to run these queries and see semantic matching in action:
 
 ```sql
 -- Semantic search on reviews: finds results about delivery issues
@@ -524,7 +524,7 @@ Notice how the results match **semantically** — for example, "delivery problem
 
 **Alternative: Test with Python**
 
-If you prefer Python, open a **Python worksheet** (click "+" → "Python Worksheet") and run:
+If you prefer Python, open **`04b_test_search_service.py`** from the same folder in your workspace and run it:
 
 ```python
 import json

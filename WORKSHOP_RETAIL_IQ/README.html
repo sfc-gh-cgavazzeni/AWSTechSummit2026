@@ -510,8 +510,10 @@ agent</p></li>
 <blockquote>
 <p>Run as <strong>ACCOUNTADMIN</strong></p>
 </blockquote>
-<p>Open <code>01_snowflake_setup/01_setup_environment.sql</code> in a
-Snowflake SQL worksheet and run it top to bottom.</p>
+<p>In your workspace, navigate to
+<code>WORKSHOP_RETAIL_IQ &gt; 01_snowflake_setup</code> and click on
+<strong><code>01_setup_environment.sql</code></strong> to open it. Run
+it top to bottom.</p>
 <p>This creates:</p>
 <ul>
 <li><p>Role <code>RETAILIQ_ROLE</code> and user
@@ -816,7 +818,7 @@ the workspace name in the left sidebar or the
 <strong><code>create_semantic_view.sql</code></strong> to open it
 directly — the file is already in your workspace from the Git
 repo</p></li>
-<li><p>Run the entire worksheet — it executes a single
+<li><p>Run the entire script — it executes a single
 <code>CREATE OR REPLACE SEMANTIC VIEW</code> DDL statement that defines
 all tables, relationships, dimensions, facts, metrics, custom
 instructions, and verified queries in one go.</p></li>
@@ -951,8 +953,10 @@ text</p></li>
 text</p></li>
 </ul>
 <p><strong>Test the search services:</strong></p>
-<p>Open a new SQL worksheet and run these queries to see semantic
-matching in action:</p>
+<p>In your workspace, navigate to
+<code>WORKSHOP_RETAIL_IQ &gt; 01_snowflake_setup</code> and open
+<strong><code>04b_test_search_service.sql</code></strong> to run these
+queries and see semantic matching in action:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Semantic search on reviews: finds results about delivery issues</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- even if the exact word &quot;delivery&quot; doesn&#39;t appear in the text</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
@@ -986,8 +990,9 @@ lost packages, or courier issues in Sicily/Naples, even if the exact
 phrase “delivery problems” never appears. This is the power of hybrid
 search (BM25 + vector embeddings) vs. pure keyword matching.</p>
 <p><strong>Alternative: Test with Python</strong></p>
-<p>If you prefer Python, open a <strong>Python worksheet</strong> (click
-“+” → “Python Worksheet”) and run:</p>
+<p>If you prefer Python, open
+<strong><code>04b_test_search_service.py</code></strong> from the same
+folder in your workspace and run it:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> snowflake.snowpark.context <span class="im">import</span> get_active_session</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
