@@ -361,8 +361,6 @@ When Analyst returns the answer, click on the **SQL** panel to expand it. You'll
 
 **2. Physical Query** — This is the actual executable Snowflake SQL that gets run against your warehouse. It translates the logical plan into concrete JOINs, column references, and WHERE clauses. This is what you'd have to write manually without Analyst.
 
-> **Why this matters for SAs:** The logical/physical split is what makes Analyst production-safe. The LLM only generates the logical plan (constrained by the Semantic View vocabulary). The physical query is deterministically derived from the SV definition — no hallucinated table names, no invented columns. This is a fundamentally different architecture from "just ask GPT to write SQL".
-
 **3. The "+ Verified Query" button** — Notice the **+ Verified Query** button (or similar "Save as VQ" action) that appears alongside the generated SQL. This is the fast path for tuning: if the generated SQL is correct, you can save it directly as a Verified Query so that next time this question (or a similar one) is asked, Analyst uses your validated SQL as-is. This is the iterative tuning loop:
 
 1. Ask a question → Analyst generates SQL
@@ -406,11 +404,9 @@ Key fields to highlight:
 
 Now let's replace the basic SV with the hand-crafted one that has metrics, synonyms, and verified queries.
 
-1. Go back to your **Workspace** in Snowsight (click the workspace icon in the left sidebar)
+1. Go back to your **Workspace** in Snowsight (click the workspace name in the left sidebar or the **Workspaces** tab at the top)
 
-2. Open a **new SQL Worksheet** — name it `Creating a Semantic View`
-
-3. Import the file `02_semantic_view/create_semantic_view.sql` from the workshop repo (or copy-paste its contents into the worksheet)
+2. In the file explorer, navigate to `WORKSHOP_RETAIL_IQ > 02_semantic_view` and click on **`create_semantic_view.sql`** to open it directly — the file is already in your workspace from the Git repo
 
 4. Run the entire worksheet — it executes a single `CREATE OR REPLACE SEMANTIC VIEW` DDL statement that defines all tables, relationships, dimensions, facts, metrics, custom instructions, and verified queries in one go.
 
@@ -424,7 +420,15 @@ SHOW SEMANTIC VIEWS LIKE 'RETAILIQ_SV' IN SCHEMA RETAILIQ_DB.ANALYTICS;
 
 #### Step 2c — Test with the Tuned Semantic View (5 min)
 
-Ask the same question again with `RETAILIQ_SV` (the tuned one). Compare:
+Go back to **AI & ML → Cortex Analyst** in the left navigation sidebar. This time, select **RETAILIQ_SV** (the tuned version you just deployed).
+
+Before opening the Playground, take a moment to look at the **left panel** — notice how much richer this Semantic View is compared to the basic one CoCo generated: you'll see custom **Metrics** (like `total_revenue`, `avg_order_value`), explicit **Relationships** with join conditions, business-specific **Dimensions** with synonyms, and **Verified Queries** that serve as ground-truth examples. This is the difference between an auto-scaffolded SV and a production-tuned one.
+
+Now open the **Playground** tab and type:
+
+> "What is the revenue by region for this year?"
+
+Compare the results with what you got from the basic SV:
 
 - The SQL now correctly uses `SUM(total_amount) WHERE status='Completed'`
 
@@ -434,13 +438,19 @@ Ask the same question again with `RETAILIQ_SV` (the tuned one). Compare:
 
 #### Step 2d — Tune Further: Add a Verified Query (5 min)
 
-In the Analyst UI, click on the Semantic View and add a new Verified Query:
+In the Analyst UI, click on **RETAILIQ_SV** and select **Verified Queries** in the left panel, then click **+ Add** to create a new Verified Query:
 
-- Question: "What is our return rate by product category?"
+- **Question:** "What is our return rate by product category?"
 
-- Use the SQL from `retailiq_semantic_view.yaml` as a reference
+- **SQL:** Write (or paste) the logical query that correctly answers this question — Cortex Analyst will show both the Logical and Physical query tabs
 
-- Save and re-test — the VQ guarantees the exact SQL you validated
+- Click **Run** on the right panel ("Test query and verify") to validate the results are correct
+
+- Once satisfied, click **Save and continue** to lock it in
+
+<img src="assets/VQR.jpg" width="700" height="430">
+
+*The "Add Verified Queries" screen: enter the natural language question, write the correct SQL (logical query), test it on the right panel, then click "Save and continue" to persist it as ground-truth.*
 
 **Takeaway:** Verified Queries are the single most impactful tuning mechanism. They guarantee correct SQL for your most important business questions. Start with auto-generate to get a baseline, then iteratively add metrics, synonyms, and VQs.
 
