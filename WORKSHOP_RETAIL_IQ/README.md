@@ -241,6 +241,8 @@ Upload these files from the `00_data/` folder:
 
 - `support_tickets.csv`
 
+> **Navigate back to the workspace:** Click **Projects → Workspaces** in the left sidebar and open your **AWSTechSummit2026** workspace to access the SQL files.
+
 **Step 2:** Run `01_snowflake_setup/02_create_tables.sql` to create tables.
 
 **Step 3:** Run `01_snowflake_setup/03_load_data.sql` to load data.
@@ -254,8 +256,6 @@ stores:               ~50
 customer_reviews: ~15,000
 support_tickets:   ~8,000
 ```
-
-> **Discussion point:** Ask participants to query the raw data and try to answer "What is revenue by region this year?" manually. They'll write 15+ lines of SQL. This motivates the Semantic View.
 
 ---
 
@@ -281,9 +281,13 @@ A Semantic View is a **business vocabulary layer** that sits between your raw ta
 
 Cortex Analyst always requires a Semantic View — there's no "zero SV" mode. But rather than hand-writing YAML from scratch, we'll use **Cortex Code** (CoCo) and its **semantic-view skill** to scaffold a first version automatically from the schema.
 
-**Open Cortex Code** (CoCo Desktop or the browser IDE) connected to the `RETAILIQ_DB.ANALYTICS` schema.
+**Open Cortex Code** — after running `03_load_data.sql` and verifying your row counts, look at the bottom-right corner of the Snowsight workspace. You'll see the **"Open or move CoCo"** button (the blue/green sparkle icon). Click it to open the CoCo chat panel.
 
-In the CoCo chat, type the following prompt:
+<img src="assets/coco1.jpg" width="932" height="403">
+
+*After running the data load script, your workspace shows the verification results (row counts). Notice the "Open or move CoCo" button in the bottom-right corner — click it to launch Cortex Code.*
+
+Once the CoCo chat panel opens, type the following prompt:
 
 ```
 Create a semantic view called RETAILIQ_SV_BASIC for the tables
@@ -295,17 +299,29 @@ and add basic column descriptions. No verified queries, no custom metrics,
 no synonyms — just the foundation.
 ```
 
-> **What happens:** CoCo invokes the `semantic-view` skill which reads the table schemas via `DESCRIBE TABLE`, infers join relationships (via matching column names like `product_id`, `customer_id`, `store_id`), generates column descriptions from the column names, and produces a complete YAML file. It will also deploy the SV to Snowflake.
+<img src="assets/coco2.jpg" width="258" height="475">
+
+*CoCo receives the prompt and starts working. It first examines the four table schemas (running queries to detect columns and types), then identifies the join relationships: ORDERS links to CUSTOMERS (via CUSTOMER_ID), PRODUCTS (via PRODUCT_ID), and STORES (via STORE_ID). It then invokes the `semantic_studio` skill to generate the complete Semantic View definition.*
 
 **Watch CoCo work** — it will:
 
-1. Inspect all 4 table schemas
+1. Run queries to inspect all 4 table schemas
 
-2. Detect 3 join paths (orders→products, orders→customers, orders→stores)
+2. Detect 3 join relationships (ORDERS→CUSTOMERS, ORDERS→PRODUCTS, ORDERS→STORES)
 
-3. Generate column-level descriptions
+3. Invoke the **semantic_studio** skill to generate the SV YAML
 
-4. Create and deploy the Semantic View
+4. Read and verify the generated file
+
+5. Add any missing join relationships
+
+6. Deploy the Semantic View to Snowflake
+
+When CoCo finishes generating the Semantic View, it will prompt you to **save it to Snowflake**. You'll see a confirmation dialog: "Save semantic view from cortex_project/RETAILIQ_... to RETAILIQ_DB.ANALYTICS" — click **Allow** to deploy it. After deployment, CoCo shows "Changed 1 file" — click **Keep all** to confirm.
+
+<img src="assets/coco3.jpg" width="258" height="475">
+
+*CoCo completes the generation, adds relationships, and presents the "Save semantic view to Snowflake" action. Click **Allow** to deploy, then **Keep all** to confirm the changes.*
 
 **Now test the basic SV in Cortex Analyst Playground:**
 
