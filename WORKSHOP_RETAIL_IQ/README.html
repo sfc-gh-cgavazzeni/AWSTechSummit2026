@@ -836,9 +836,13 @@ is compared to the basic one CoCo generated: you’ll see custom
 <strong>Metrics</strong> (like <code>total_revenue</code>,
 <code>avg_order_value</code>), explicit <strong>Relationships</strong>
 with join conditions, business-specific <strong>Dimensions</strong> with
-synonyms, and <strong>Verified Queries</strong> that serve as
-ground-truth examples. This is the difference between an auto-scaffolded
-SV and a production-tuned one.</p>
+synonyms, <strong>Verified Queries</strong> that serve as ground-truth
+examples, and <strong>Custom Instructions</strong> under the AI SQL
+Generation section that guide the model on how to interpret ambiguous
+terms, handle edge cases, and apply business logic (e.g., “revenue
+always means completed orders only”, “when the user says ‘region’
+default to customer region”). This is the difference between an
+auto-scaffolded SV and a production-tuned one.</p>
 <p>Now open the <strong>Playground</strong> tab and type:</p>
 <blockquote>
 <p>“What is the revenue by region for this year?”</p>
@@ -941,75 +945,26 @@ text</p></li>
 <li><p><code>RETAILIQ_TICKETS_SEARCH</code> — over support ticket
 text</p></li>
 </ul>
-<p><strong>Test the search services:</strong></p>
-<p>In your workspace, navigate to
-<code>WORKSHOP_RETAIL_IQ &gt; 01_snowflake_setup</code> and open
-<strong><code>04b_test_search_service.sql</code></strong> to run these
-queries and see semantic matching in action:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Semantic search on reviews: finds results about delivery issues</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- even if the exact word &quot;delivery&quot; doesn&#39;t appear in the text</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> <span class="kw">TABLE</span>(</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH&#39;</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;{</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;query&quot;: &quot;delivery problems in southern Italy&quot;,</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;columns&quot;: [&quot;review_text&quot;, &quot;product_name&quot;, &quot;rating&quot;],</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;limit&quot;: 5</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="st">    }&#39;</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- Semantic search on tickets: finds billing/refund issues</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">-- without needing exact keyword matches</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> <span class="kw">TABLE</span>(</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH&#39;</span>,</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;{</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;query&quot;: &quot;refund not processed&quot;,</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;columns&quot;: [&quot;ticket_text&quot;, &quot;category&quot;, &quot;status&quot;],</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;limit&quot;: 5</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="st">    }&#39;</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
-<p>Notice how the results match <strong>semantically</strong> — for
-example, “delivery problems” finds reviews mentioning slow shipping,
-lost packages, or courier issues in Sicily/Naples, even if the exact
-phrase “delivery problems” never appears. This is the power of hybrid
-search (BM25 + vector embeddings) vs. pure keyword matching.</p>
-<p><strong>Alternative: Test with Python (Snowpark)</strong></p>
-<p>If you prefer Python, open
-<strong><code>04b_test_search_service.py</code></strong> from the same
-folder in your workspace and run it. This version uses
-<code>SEARCH_PREVIEW</code> via Snowpark SQL.</p>
-<p><strong>Alternative: Test with REST API (recommended for AWS
-SAs)</strong></p>
-<p>For a more realistic integration perspective, use the REST API — this
-is the same interface that external clients (AWS Bedrock AgentCore,
-Strands agents, or any MCP client) use to query Cortex Search
-programmatically.</p>
-<p>Open <strong><code>04b_test_search_service_rest.py</code></strong> or
-<strong><code>04b_test_search_service_rest.sh</code></strong> from your
-workspace. These scripts call the Cortex Search REST endpoint directly
-using a PAT token:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&quot;</span><span class="va">${ACCOUNT_URL}</span><span class="st">/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/cortex-search-services/RETAILIQ_REVIEWS_SEARCH:query&quot;</span> <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--header</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">${PAT}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--header</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--data</span> <span class="st">&#39;{</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;query&quot;: &quot;delivery problems in southern Italy&quot;,</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;columns&quot;: [&quot;REVIEW_TEXT&quot;, &quot;PRODUCT_NAME&quot;, &quot;RATING&quot;],</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;filter&quot;: {&quot;@lte&quot;: {&quot;RATING&quot;: 2}},</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;limit&quot;: 5</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span></code></pre></div>
-<p>Notice how the REST API supports <strong>filters</strong> (e.g.,
-<code>@lte</code>, <code>@eq</code>, <code>@contains</code>) to combine
-semantic search with structured attribute filtering — all in one call,
-no post-processing needed.</p>
-<blockquote>
-<p>To generate a PAT: User menu → My Profile → Programmatic Access
-Tokens → Generate</p>
-</blockquote>
+<p><strong>Test the search services (optional):</strong></p>
+<p>If you want to test the search services, open one of the following
+files from your workspace
+(<code>WORKSHOP_RETAIL_IQ &gt; 01_snowflake_setup</code>):</p>
+<ul>
+<li><strong><code>04b_test_search_service.sql</code></strong> — SQL
+queries using <code>SEARCH_PREVIEW</code> with <code>PARSE_JSON</code> +
+<code>FLATTEN</code></li>
+<li><strong><code>04b_test_search_service.py</code></strong> — Python
+version using Snowpark SQL</li>
+<li><strong><code>04b_test_search_service_rest.py</code></strong> or
+<strong><code>04b_test_search_service_rest.sh</code></strong> — REST API
+version using PAT token authentication (same interface that external
+clients like AWS Bedrock AgentCore use)</li>
+</ul>
+<p>These demonstrate how the results match <strong>semantically</strong>
+— for example, “delivery problems” finds reviews mentioning slow
+shipping, lost packages, or courier issues, even if the exact phrase
+never appears. This is the power of hybrid search (BM25 + vector
+embeddings) vs. pure keyword matching.</p>
 <p><strong>Key message for SA architects:</strong> Cortex Search is a
 <strong>hybrid search</strong> (full-text + vector embedding) with no
 infrastructure to manage. Zero vector database to deploy, zero embedding
@@ -1149,23 +1104,33 @@ button) to start a new conversation</p></li>
 <p><strong>Step 4c — Demo questions (run in this order to show
 progressive complexity)</strong></p>
 <ol type="1">
-<li><p><code>&quot;What are our top 5 categories by revenue this quarter?&quot;</code>
-→ <strong>Analyst only</strong> — generates SQL, returns structured
-table</p></li>
-<li><p><code>&quot;What do customers say about our electronics products?&quot;</code>
+<li><p><code>&quot;What is the revenue by region?&quot;</code> → <strong>Analyst
+only</strong> — generates SQL, returns structured table</p></li>
+<li><p><code>&quot;Top 5 product categories by number of orders&quot;</code> →
+<strong>Analyst only</strong> — SQL aggregation with ranking</p></li>
+<li><p><code>&quot;What do customers complain about regarding delivery?&quot;</code>
 → <strong>Search only</strong> — semantic search over reviews, returns
 qualitative excerpts</p></li>
-<li><p><code>&quot;Which product categories have the highest return rates, and what are customers saying about those returns?&quot;</code>
-→ <strong>Both tools</strong> — the agent reasons: first Analyst for
-return rate data, then Search for customer verbatims about those
-categories</p></li>
-<li><p><code>&quot;Compare revenue performance by region — and are there regions with more delivery complaints?&quot;</code>
-→ <strong>Cross-tool reasoning</strong> — Analyst for regional revenue,
-Search for complaint patterns, agent synthesizes both</p></li>
+<li><p><code>&quot;Find support tickets about refund delays&quot;</code> →
+<strong>Search only</strong> — searches tickets corpus for
+refund-related issues</p></li>
+<li><p><code>&quot;Which region has the most complaints about delivery?&quot;</code>
+→ <strong>Cross-tool reasoning</strong> — Search for delivery
+complaints, Analyst for regional grouping, agent synthesizes
+both</p></li>
+<li><p><code>&quot;Are there any support tickets about our top-selling product?&quot;</code>
+→ <strong>Both tools</strong> — Analyst identifies top product, Search
+finds related tickets</p></li>
 </ol>
 <blockquote>
+<p><strong>Note:</strong> Avoid prompts like <em>“Summarize all reviews
+for electronics”</em> — these trigger <code>AI_AGG</code> over hundreds
+of rows and can take 3-5+ minutes. Keep prompts focused on specific
+questions rather than broad summarization requests.</p>
+</blockquote>
+<blockquote>
 <p><strong>Live demo moment:</strong> Show the <strong>reasoning
-trace</strong> panel (expand the tool calls). SAs will see: - Which tool
+trace</strong> panel (expand the tool calls). You will see: - Which tool
 was selected and why - The exact query sent to each tool - How the agent
 synthesizes answers from multiple sources - This is the debugging and
 observability story for production deployments.</p>
@@ -1176,14 +1141,14 @@ Snowflake Managed MCP Server <code>[10 min]</code></h3>
 <p>In your workspace, navigate to
 <code>WORKSHOP_RETAIL_IQ &gt; 03_aws_setup</code> and open
 <strong><code>01_create_mcp_server.sql</code></strong>.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Copy the endpoint URL from the result — you&#39;ll need it for AWS</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Copy the endpoint URL from the result — you&#39;ll need it for AWS</span></span></code></pre></div>
 <p>Also run the PAT Token creation section in the same script
 (<code>03_aws_setup/01_create_mcp_server.sql</code>):</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Save this token — it&#39;s shown only once!</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">ADD</span> PROGRAMMATIC <span class="kw">ACCESS</span> TOKEN retailiq_mcp_token </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  DAYS_TO_EXPIRY <span class="op">=</span> <span class="dv">7</span> </span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  ROLE_RESTRICTION <span class="op">=</span> <span class="st">&#39;RETAILIQ_ROLE&#39;</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Save this token — it&#39;s shown only once!</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">ADD</span> PROGRAMMATIC <span class="kw">ACCESS</span> TOKEN retailiq_mcp_token </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  DAYS_TO_EXPIRY <span class="op">=</span> <span class="dv">7</span> </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  ROLE_RESTRICTION <span class="op">=</span> <span class="st">&#39;RETAILIQ_ROLE&#39;</span>;</span></code></pre></div>
 <p><strong>What to save before the next module:</strong></p>
 <pre><code>MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/mcp/...
 PAT Token:         &lt;token value shown once&gt;
@@ -1214,16 +1179,16 @@ VPC</li>
 <li>Go to Outputs → <code>Ec2ConnectionURL</code> → click to open AWS
 CloudShell or use EC2 Instance Connect</li>
 </ol>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /opt/retailiq</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span>  <span class="co"># verify files are present</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">--version</span>  <span class="co"># should be 3.11+</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /opt/retailiq</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span>  <span class="co"># verify files are present</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">--version</span>  <span class="co"># should be 3.11+</span></span></code></pre></div>
 <hr />
 <h3 id="module-7-strands-agent-end-to-end-10-min">Module 7 — Strands
 Agent End-to-End <code>[10 min]</code></h3>
 <p>On the EC2 instance:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
 <p>You’ll see the welcome banner. Test with the sample questions from
 <code>help</code>:</p>
 <pre><code>&gt; What are the top 5 product categories by revenue this quarter?
@@ -1291,12 +1256,12 @@ Patterns &amp; Q&amp;A <code>[10 min]</code></h3>
 </table>
 <p><strong>Security pattern — lock down MCP to AgentCore IPs
 only:</strong></p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
 <p><strong>Seed Q&amp;A questions (for facilitators):</strong></p>
 <ul>
 <li><p><em>“Can I use this with Bedrock Knowledge Bases instead of

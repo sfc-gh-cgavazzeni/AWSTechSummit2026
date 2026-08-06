@@ -420,7 +420,7 @@ SHOW SEMANTIC VIEWS LIKE 'RETAILIQ_SV' IN SCHEMA RETAILIQ_DB.ANALYTICS;
 
 Go back to **AI & ML → Cortex Analyst** in the left navigation sidebar. This time, select **RETAILIQ_SV** (the tuned version you just deployed).
 
-Before opening the Playground, take a moment to look at the **left panel** — notice how much richer this Semantic View is compared to the basic one CoCo generated: you'll see custom **Metrics** (like `total_revenue`, `avg_order_value`), explicit **Relationships** with join conditions, business-specific **Dimensions** with synonyms, and **Verified Queries** that serve as ground-truth examples. This is the difference between an auto-scaffolded SV and a production-tuned one.
+Before opening the Playground, take a moment to look at the **left panel** — notice how much richer this Semantic View is compared to the basic one CoCo generated: you'll see custom **Metrics** (like `total_revenue`, `avg_order_value`), explicit **Relationships** with join conditions, business-specific **Dimensions** with synonyms, **Verified Queries** that serve as ground-truth examples, and **Custom Instructions** under the AI SQL Generation section that guide the model on how to interpret ambiguous terms, handle edge cases, and apply business logic (e.g., "revenue always means completed orders only", "when the user says 'region' default to customer region"). This is the difference between an auto-scaffolded SV and a production-tuned one.
 
 Now open the **Playground** tab and type:
 
@@ -485,67 +485,15 @@ This creates two search services:
 
 - `RETAILIQ_TICKETS_SEARCH` — over support ticket text
 
-**Test the search services:**
+**Test the search services (optional):**
 
-In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 01_snowflake_setup` and open **`04b_test_search_service.sql`** to run these queries and see semantic matching in action:
+If you want to test the search services, open one of the following files from your workspace (`WORKSHOP_RETAIL_IQ > 01_snowflake_setup`):
 
-```sql
--- Semantic search on reviews: finds results about delivery issues
--- even if the exact word "delivery" doesn't appear in the text
-SELECT *
-FROM TABLE(
-  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
-    'RETAILIQ_DB.ANALYTICS.RETAILIQ_REVIEWS_SEARCH',
-    '{
-      "query": "delivery problems in southern Italy",
-      "columns": ["review_text", "product_name", "rating"],
-      "limit": 5
-    }'
-  )
-);
+- **`04b_test_search_service.sql`** — SQL queries using `SEARCH_PREVIEW` with `PARSE_JSON` + `FLATTEN`
+- **`04b_test_search_service.py`** — Python version using Snowpark SQL
+- **`04b_test_search_service_rest.py`** or **`04b_test_search_service_rest.sh`** — REST API version using PAT token authentication (same interface that external clients like AWS Bedrock AgentCore use)
 
--- Semantic search on tickets: finds billing/refund issues
--- without needing exact keyword matches
-SELECT *
-FROM TABLE(
-  SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
-    'RETAILIQ_DB.ANALYTICS.RETAILIQ_TICKETS_SEARCH',
-    '{
-      "query": "refund not processed",
-      "columns": ["ticket_text", "category", "status"],
-      "limit": 5
-    }'
-  )
-);
-```
-
-Notice how the results match **semantically** — for example, "delivery problems" finds reviews mentioning slow shipping, lost packages, or courier issues in Sicily/Naples, even if the exact phrase "delivery problems" never appears. This is the power of hybrid search (BM25 + vector embeddings) vs. pure keyword matching.
-
-**Alternative: Test with Python (Snowpark)**
-
-If you prefer Python, open **`04b_test_search_service.py`** from the same folder in your workspace and run it. This version uses `SEARCH_PREVIEW` via Snowpark SQL.
-
-**Alternative: Test with REST API (recommended for AWS SAs)**
-
-For a more realistic integration perspective, use the REST API — this is the same interface that external clients (AWS Bedrock AgentCore, Strands agents, or any MCP client) use to query Cortex Search programmatically.
-
-Open **`04b_test_search_service_rest.py`** or **`04b_test_search_service_rest.sh`** from your workspace. These scripts call the Cortex Search REST endpoint directly using a PAT token:
-
-```bash
-curl -s "${ACCOUNT_URL}/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/cortex-search-services/RETAILIQ_REVIEWS_SEARCH:query" \
-  --header "Authorization: Bearer ${PAT}" \
-  --header "Content-Type: application/json" \
-  --data '{
-    "query": "delivery problems in southern Italy",
-    "columns": ["REVIEW_TEXT", "PRODUCT_NAME", "RATING"],
-    "filter": {"@lte": {"RATING": 2}},
-    "limit": 5
-  }'
-```
-
-Notice how the REST API supports **filters** (e.g., `@lte`, `@eq`, `@contains`) to combine semantic search with structured attribute filtering — all in one call, no post-processing needed.
-
-> To generate a PAT: User menu → My Profile → Programmatic Access Tokens → Generate
+These demonstrate how the results match **semantically** — for example, "delivery problems" finds reviews mentioning slow shipping, lost packages, or courier issues, even if the exact phrase never appears. This is the power of hybrid search (BM25 + vector embeddings) vs. pure keyword matching.
 
 **Key message for SA architects:** Cortex Search is a **hybrid search** (full-text + vector embedding) with no infrastructure to manage. Zero vector database to deploy, zero embedding pipeline to maintain.
 
@@ -644,19 +592,27 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 **Step 4c — Demo questions (run in this order to show progressive complexity)**
 
-1. `"What are our top 5 categories by revenue this quarter?"`
+1. `"What is the revenue by region?"`
    → **Analyst only** — generates SQL, returns structured table
 
-2. `"What do customers say about our electronics products?"`
+2. `"Top 5 product categories by number of orders"`
+   → **Analyst only** — SQL aggregation with ranking
+
+3. `"What do customers complain about regarding delivery?"`
    → **Search only** — semantic search over reviews, returns qualitative excerpts
 
-3. `"Which product categories have the highest return rates, and what are customers saying about those returns?"`
-   → **Both tools** — the agent reasons: first Analyst for return rate data, then Search for customer verbatims about those categories
+4. `"Find support tickets about refund delays"`
+   → **Search only** — searches tickets corpus for refund-related issues
 
-4. `"Compare revenue performance by region — and are there regions with more delivery complaints?"`
-   → **Cross-tool reasoning** — Analyst for regional revenue, Search for complaint patterns, agent synthesizes both
+5. `"Which region has the most complaints about delivery?"`
+   → **Cross-tool reasoning** — Search for delivery complaints, Analyst for regional grouping, agent synthesizes both
 
-> **Live demo moment:** Show the **reasoning trace** panel (expand the tool calls). SAs will see:
+6. `"Are there any support tickets about our top-selling product?"`
+   → **Both tools** — Analyst identifies top product, Search finds related tickets
+
+> **Note:** Avoid prompts like *"Summarize all reviews for electronics"* — these trigger `AI_AGG` over hundreds of rows and can take 3-5+ minutes. Keep prompts focused on specific questions rather than broad summarization requests.
+
+> **Live demo moment:** Show the **reasoning trace** panel (expand the tool calls). You will see:
 > - Which tool was selected and why
 > - The exact query sent to each tool
 > - How the agent synthesizes answers from multiple sources
