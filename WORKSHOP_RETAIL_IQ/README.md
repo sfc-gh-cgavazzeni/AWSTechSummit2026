@@ -696,9 +696,60 @@ python3 --version  # should be 3.11+
 
 ---
 
-### Module 7 — Strands Agent End-to-End `[10 min]`
+### Module 7 — Test the MCP Server from AWS `[10 min]`
 
-On the EC2 instance:
+In this module you'll validate that the Snowflake MCP Server is accessible from AWS infrastructure. This proves the end-to-end connectivity that would be used in production by AWS Bedrock AgentCore, Strands agents, or any MCP-compatible client.
+
+**Step 7a — Quick validation from AWS CloudShell**
+
+Open **AWS CloudShell** (available in any AWS region — no EC2 needed, zero setup). Set your variables:
+
+```bash
+export ACCOUNT_URL="https://<your-account>.snowflakecomputing.com"
+export PAT="<your-pat-token>"
+export MCP_URL="${ACCOUNT_URL}/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT"
+```
+
+> **Note:** If your Snowflake account has a network policy, you'll need to allow the CloudShell outbound IP. Create a temporary user-level network policy:
+> ```sql
+> USE ROLE ACCOUNTADMIN;
+> CREATE NETWORK POLICY RETAILIQ_MCP_POLICY ALLOWED_IP_LIST = ('0.0.0.0/0')
+>   COMMENT = 'Temporary open policy for MCP testing';
+> ALTER USER RETAILIQ_USER SET NETWORK_POLICY = RETAILIQ_MCP_POLICY;
+> ```
+> Remove it after testing:
+> ```sql
+> ALTER USER RETAILIQ_USER UNSET NETWORK_POLICY;
+> DROP NETWORK POLICY RETAILIQ_MCP_POLICY;
+> ```
+
+**Test 1 — Discover tools (tools/list):**
+
+```bash
+curl -s "$MCP_URL" \
+  -H "Authorization: Bearer $PAT" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | python3 -m json.tool
+```
+
+You should see the `retailiq_agent` tool with its description. This confirms: authentication works, the MCP endpoint is reachable, and tool discovery is functional.
+
+**Test 2 — Invoke the agent (tools/call):**
+
+```bash
+curl -s "$MCP_URL" \
+  -H "Authorization: Bearer $PAT" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"retailiq_agent","arguments":{"text":"What is the revenue by region?"}}}' | python3 -m json.tool
+```
+
+This calls the Cortex Agent through MCP. The agent orchestrates internally (selects Cortex Analyst, generates SQL, runs it) and returns the complete answer. Expected response time: 30-90 seconds (the agent runs multiple SQL queries under the hood).
+
+> **Key takeaway for AWS SAs:** This is the exact same protocol that Bedrock AgentCore uses. The MCP standard means you can swap the client (CloudShell → Bedrock → Claude → Cursor) without changing anything on the Snowflake side.
+
+**Step 7b — Strands Agent End-to-End (advanced)**
+
+On an EC2 instance (or locally with `pip install strands-agents strands-agents-tools-mcp`):
 
 ```bash
 # The credentials are already injected from Secrets Manager
@@ -710,7 +761,7 @@ You'll see the welcome banner. Test with the sample questions from `help`:
 
 ```
 > What are the top 5 product categories by revenue this quarter?
-> What are customers saying about electronics?
+> Find support tickets about refund delays
 > Which regions have the most delivery complaints, and how does their revenue compare?
 ```
 

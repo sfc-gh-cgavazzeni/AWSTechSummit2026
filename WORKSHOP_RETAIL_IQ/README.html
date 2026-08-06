@@ -1247,16 +1247,63 @@ CloudShell or use EC2 Instance Connect</li>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span>  <span class="co"># verify files are present</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">--version</span>  <span class="co"># should be 3.11+</span></span></code></pre></div>
 <hr />
-<h3 id="module-7-strands-agent-end-to-end-10-min">Module 7 — Strands
-Agent End-to-End <code>[10 min]</code></h3>
-<p>On the EC2 instance:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
+<h3 id="module-7-test-the-mcp-server-from-aws-10-min">Module 7 — Test
+the MCP Server from AWS <code>[10 min]</code></h3>
+<p>In this module you’ll validate that the Snowflake MCP Server is
+accessible from AWS infrastructure. This proves the end-to-end
+connectivity that would be used in production by AWS Bedrock AgentCore,
+Strands agents, or any MCP-compatible client.</p>
+<p><strong>Step 7a — Quick validation from AWS CloudShell</strong></p>
+<p>Open <strong>AWS CloudShell</strong> (available in any AWS region —
+no EC2 needed, zero setup). Set your variables:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ACCOUNT_URL</span><span class="op">=</span><span class="st">&quot;https://&lt;your-account&gt;.snowflakecomputing.com&quot;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PAT</span><span class="op">=</span><span class="st">&quot;&lt;your-pat-token&gt;&quot;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">MCP_URL</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${ACCOUNT_URL}</span><span class="st">/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT&quot;</span></span></code></pre></div>
+<blockquote>
+<p><strong>Note:</strong> If your Snowflake account has a network
+policy, you’ll need to allow the CloudShell outbound IP. Create a
+temporary user-level network policy:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">USE</span> <span class="kw">ROLE</span> ACCOUNTADMIN;</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">NETWORK</span> POLICY RETAILIQ_MCP_POLICY ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;0.0.0.0/0&#39;</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Temporary open policy for MCP testing&#39;</span>;</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> RETAILIQ_USER <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> RETAILIQ_MCP_POLICY;</span></code></pre></div>
+<p>Remove it after testing:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> RETAILIQ_USER UNSET NETWORK_POLICY;</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">NETWORK</span> POLICY RETAILIQ_MCP_POLICY;</span></code></pre></div>
+</blockquote>
+<p><strong>Test 1 — Discover tools (tools/list):</strong></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&quot;</span><span class="va">$MCP_URL</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$PAT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;tools/list&quot;,&quot;params&quot;:{}}&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>You should see the <code>retailiq_agent</code> tool with its
+description. This confirms: authentication works, the MCP endpoint is
+reachable, and tool discovery is functional.</p>
+<p><strong>Test 2 — Invoke the agent (tools/call):</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&quot;</span><span class="va">$MCP_URL</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$PAT</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:2,&quot;method&quot;:&quot;tools/call&quot;,&quot;params&quot;:{&quot;name&quot;:&quot;retailiq_agent&quot;,&quot;arguments&quot;:{&quot;text&quot;:&quot;What is the revenue by region?&quot;}}}&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>This calls the Cortex Agent through MCP. The agent orchestrates
+internally (selects Cortex Analyst, generates SQL, runs it) and returns
+the complete answer. Expected response time: 30-90 seconds (the agent
+runs multiple SQL queries under the hood).</p>
+<blockquote>
+<p><strong>Key takeaway for AWS SAs:</strong> This is the exact same
+protocol that Bedrock AgentCore uses. The MCP standard means you can
+swap the client (CloudShell → Bedrock → Claude → Cursor) without
+changing anything on the Snowflake side.</p>
+</blockquote>
+<p><strong>Step 7b — Strands Agent End-to-End (advanced)</strong></p>
+<p>On an EC2 instance (or locally with
+<code>pip install strands-agents strands-agents-tools-mcp</code>):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
 <p>You’ll see the welcome banner. Test with the sample questions from
 <code>help</code>:</p>
 <pre><code>&gt; What are the top 5 product categories by revenue this quarter?
-&gt; What are customers saying about electronics?
+&gt; Find support tickets about refund delays
 &gt; Which regions have the most delivery complaints, and how does their revenue compare?</code></pre>
 <p><strong>Watch the terminal output</strong> — you’ll see:</p>
 <ul>
@@ -1320,12 +1367,12 @@ Patterns &amp; Q&amp;A <code>[10 min]</code></h3>
 </table>
 <p><strong>Security pattern — lock down MCP to AgentCore IPs
 only:</strong></p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
 <p><strong>Seed Q&amp;A questions (for facilitators):</strong></p>
 <ul>
 <li><p><em>“Can I use this with Bedrock Knowledge Bases instead of
