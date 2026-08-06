@@ -24,3 +24,6 @@ build/
 *.pem
 *.key
 config.local.yaml
+
+# Local backups
+*.oldsearch

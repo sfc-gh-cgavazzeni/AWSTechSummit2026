@@ -625,7 +625,11 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 8. Click **"Save"** to save the agent configuration
 
-9. After saving, click **"Add to Snowflake CoWork"** to make the agent available in the CoWork conversational interface
+9. Click **"Publish"** — this creates a versioned release from your draft. Check **"Use this version"** to send traffic to it, then click **Publish**.
+
+<img src="assets/agent_publish.jpg" width="330" height="330">
+
+10. After publishing, click **"Add to Snowflake CoWork"** to make the agent available in the CoWork conversational interface
 
 
 **Step 4b — Open CoWork and select the agent**
