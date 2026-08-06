@@ -1138,19 +1138,83 @@ observability story for production deployments.</p>
 <hr />
 <h3 id="module-5-snowflake-managed-mcp-server-10-min">Module 5 —
 Snowflake Managed MCP Server <code>[10 min]</code></h3>
+<p>The MCP Server is the bridge between Snowflake and external AI
+clients (AWS Bedrock AgentCore, Claude, Cursor, etc.). You have
+<strong>two architecture options</strong> — choose the one that matches
+your integration pattern:</p>
+<p><strong>Option A — Expose individual tools</strong>
+(<code>01_create_mcp_server.sql</code>)</p>
+<p>The external client (e.g., Bedrock AgentCore with Strands SDK) sees 3
+separate tools and decides which one to call for each question.</p>
+<p><strong>Option B — Expose the Cortex Agent</strong>
+(<code>01_create_mcp_server_agent.sql</code>) <em>(recommended)</em></p>
+<p>The external client sees a single tool. Snowflake’s Cortex Agent
+handles orchestration internally — tool selection, cross-tool reasoning,
+and answer synthesis all happen server-side.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th></th>
+<th><strong>Option A: Individual Tools</strong></th>
+<th><strong>Option B: Agent as Tool</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MCP tools exposed</strong></td>
+<td>3 (Analyst + 2 Search)</td>
+<td>1 (Agent)</td>
+</tr>
+<tr>
+<td><strong>Who decides which tool to call?</strong></td>
+<td>The external client (Bedrock AgentCore / Strands)</td>
+<td>Snowflake Cortex Agent</td>
+</tr>
+<tr>
+<td><strong>Cross-tool reasoning</strong></td>
+<td>Client must call multiple tools and synthesize</td>
+<td>Agent does it in one invocation</td>
+</tr>
+<tr>
+<td><strong>Governance &amp; guardrails</strong></td>
+<td>Client can bypass intended tool routing</td>
+<td>Single governed endpoint, agent enforces boundaries</td>
+</tr>
+<tr>
+<td><strong>Best for…</strong></td>
+<td>Clients that want fine-grained control over tool selection</td>
+<td>Production apps that need a single governed interface</td>
+</tr>
+<tr>
+<td><strong>AgentCore integration</strong></td>
+<td>Strands agent defines tool selection logic</td>
+<td>Strands agent is a thin passthrough to Snowflake orchestration</td>
+</tr>
+</tbody>
+</table>
 <p>In your workspace, navigate to
-<code>WORKSHOP_RETAIL_IQ &gt; 03_aws_setup</code> and open
-<strong><code>01_create_mcp_server.sql</code></strong>.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Copy the endpoint URL from the result — you&#39;ll need it for AWS</span></span></code></pre></div>
-<p>Also run the PAT Token creation section in the same script
-(<code>03_aws_setup/01_create_mcp_server.sql</code>):</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Save this token — it&#39;s shown only once!</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">ADD</span> PROGRAMMATIC <span class="kw">ACCESS</span> TOKEN retailiq_mcp_token </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  DAYS_TO_EXPIRY <span class="op">=</span> <span class="dv">7</span> </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  ROLE_RESTRICTION <span class="op">=</span> <span class="st">&#39;RETAILIQ_ROLE&#39;</span>;</span></code></pre></div>
+<code>WORKSHOP_RETAIL_IQ &gt; 03_aws_setup</code> and run
+<strong>one</strong> of the two scripts:</p>
+<ul>
+<li><strong><code>01_create_mcp_server.sql</code></strong> — Option A
+(individual tools)</li>
+<li><strong><code>01_create_mcp_server_agent.sql</code></strong> —
+Option B (agent as single tool)</li>
+</ul>
+<p>After running, execute the PAT Token creation section (in the same
+script):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Save this token — it&#39;s shown only once!</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">USE</span> <span class="kw">ROLE</span> ACCOUNTADMIN;</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">ADD</span> PROGRAMMATIC <span class="kw">ACCESS</span> TOKEN retailiq_mcp_token </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  DAYS_TO_EXPIRY <span class="op">=</span> <span class="dv">7</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  ROLE_RESTRICTION <span class="op">=</span> <span class="st">&#39;RETAILIQ_ROLE&#39;</span>;</span></code></pre></div>
 <p><strong>What to save before the next module:</strong></p>
-<pre><code>MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/mcp/...
+<pre><code>MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT
 PAT Token:         &lt;token value shown once&gt;
 Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)</code></pre>
 <p><strong>Key message:</strong> The MCP endpoint is a standards-based
@@ -1179,16 +1243,16 @@ VPC</li>
 <li>Go to Outputs → <code>Ec2ConnectionURL</code> → click to open AWS
 CloudShell or use EC2 Instance Connect</li>
 </ol>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /opt/retailiq</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span>  <span class="co"># verify files are present</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">--version</span>  <span class="co"># should be 3.11+</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /opt/retailiq</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span>  <span class="co"># verify files are present</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">--version</span>  <span class="co"># should be 3.11+</span></span></code></pre></div>
 <hr />
 <h3 id="module-7-strands-agent-end-to-end-10-min">Module 7 — Strands
 Agent End-to-End <code>[10 min]</code></h3>
 <p>On the EC2 instance:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The credentials are already injected from Secrets Manager</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run the agent</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> retailiq_agent.py</span></code></pre></div>
 <p>You’ll see the welcome banner. Test with the sample questions from
 <code>help</code>:</p>
 <pre><code>&gt; What are the top 5 product categories by revenue this quarter?
@@ -1256,12 +1320,12 @@ Patterns &amp; Q&amp;A <code>[10 min]</code></h3>
 </table>
 <p><strong>Security pattern — lock down MCP to AgentCore IPs
 only:</strong></p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- After getting AgentCore NAT Gateway IPs from AWS:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">NETWORK</span> POLICY agentcore_only</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  ALLOWED_IP_LIST <span class="op">=</span> (<span class="st">&#39;X.X.X.X/32&#39;</span>, <span class="st">&#39;Y.Y.Y.Y/32&#39;</span>)  <span class="co">-- AgentCore NAT IPs</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">COMMENT</span> <span class="op">=</span> <span class="st">&#39;Restrict MCP access to AgentCore egress IPs only&#39;</span>;</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="fu">USER</span> retailiq_user <span class="kw">SET</span> NETWORK_POLICY <span class="op">=</span> agentcore_only;</span></code></pre></div>
 <p><strong>Seed Q&amp;A questions (for facilitators):</strong></p>
 <ul>
 <li><p><em>“Can I use this with Bedrock Knowledge Bases instead of

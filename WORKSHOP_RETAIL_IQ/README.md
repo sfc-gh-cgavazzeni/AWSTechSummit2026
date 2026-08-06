@@ -622,17 +622,35 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 ### Module 5 — Snowflake Managed MCP Server `[10 min]`
 
-In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and open **`01_create_mcp_server.sql`**.
+The MCP Server is the bridge between Snowflake and external AI clients (AWS Bedrock AgentCore, Claude, Cursor, etc.). You have **two architecture options** — choose the one that matches your integration pattern:
 
-```sql
-DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
--- Copy the endpoint URL from the result — you'll need it for AWS
-```
+**Option A — Expose individual tools** (`01_create_mcp_server.sql`)
 
-Also run the PAT Token creation section in the same script (`03_aws_setup/01_create_mcp_server.sql`):
+The external client (e.g., Bedrock AgentCore with Strands SDK) sees 3 separate tools and decides which one to call for each question.
+
+**Option B — Expose the Cortex Agent** (`01_create_mcp_server_agent.sql`) *(recommended)*
+
+The external client sees a single tool. Snowflake's Cortex Agent handles orchestration internally — tool selection, cross-tool reasoning, and answer synthesis all happen server-side.
+
+| | **Option A: Individual Tools** | **Option B: Agent as Tool** |
+|---|---|---|
+| **MCP tools exposed** | 3 (Analyst + 2 Search) | 1 (Agent) |
+| **Who decides which tool to call?** | The external client (Bedrock AgentCore / Strands) | Snowflake Cortex Agent |
+| **Cross-tool reasoning** | Client must call multiple tools and synthesize | Agent does it in one invocation |
+| **Governance & guardrails** | Client can bypass intended tool routing | Single governed endpoint, agent enforces boundaries |
+| **Best for...** | Clients that want fine-grained control over tool selection | Production apps that need a single governed interface |
+| **AgentCore integration** | Strands agent defines tool selection logic | Strands agent is a thin passthrough to Snowflake orchestration |
+
+In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and run **one** of the two scripts:
+
+- **`01_create_mcp_server.sql`** — Option A (individual tools)
+- **`01_create_mcp_server_agent.sql`** — Option B (agent as single tool)
+
+After running, execute the PAT Token creation section (in the same script):
 
 ```sql
 -- Save this token — it's shown only once!
+USE ROLE ACCOUNTADMIN;
 ALTER USER retailiq_user ADD PROGRAMMATIC ACCESS TOKEN retailiq_mcp_token 
   DAYS_TO_EXPIRY = 7 
   ROLE_RESTRICTION = 'RETAILIQ_ROLE';
@@ -640,7 +658,7 @@ ALTER USER retailiq_user ADD PROGRAMMATIC ACCESS TOKEN retailiq_mcp_token
 
 **What to save before the next module:**
 ```
-MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/mcp/...
+MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT
 PAT Token:         <token value shown once>
 Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)
 ```
