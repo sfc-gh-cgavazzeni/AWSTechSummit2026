@@ -121,8 +121,8 @@ CREATE OR REPLACE SEMANTIC VIEW RETAILIQ_SV
 
     PRODUCTS.CATEGORY AS category
       WITH SYNONYMS = ('category', 'product type', 'department', 'categoria')
-      COMMENT = 'Top-level product category.'
-      SAMPLE_VALUES ('Electronics', 'Clothing & Apparel', 'Food & Beverage', 'Home & Garden', 'Sports & Outdoors') IS_ENUM,
+      COMMENT = 'Product category (28 categories including Smartphones, Laptops, Gaming, Wine & Spirits, Women''s, Kitchen, Cycling, etc.).'
+      SAMPLE_VALUES ('Smartphones', 'Laptops', 'Gaming', 'Wine & Spirits', 'Women''s', 'Kitchen'),
 
     PRODUCTS.SUBCATEGORY AS subcategory
       WITH SYNONYMS = ('subcategory', 'sub-category', 'sottocategoria')
@@ -230,24 +230,24 @@ CREATE OR REPLACE SEMANTIC VIEW RETAILIQ_SV
     TOP_5_CATEGORIES_BY_REVENUE AS (
       QUESTION 'What are the top 5 product categories by revenue in the last 3 months?'
       ONBOARDING_QUESTION true
-      SQL 'SELECT p.CATEGORY, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o JOIN __products AS p ON o.PRODUCT_ID = p.PRODUCT_ID WHERE o.STATUS = ''Completed'' AND o.ORDER_DATE >= DATEADD(MONTH, -3, CURRENT_DATE) GROUP BY 1 ORDER BY 2 DESC LIMIT 5'
+      SQL 'SELECT p.CATEGORY, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o JOIN __products AS p ON o.PRODUCT_ID = p.PRODUCT_ID WHERE o.STATUS = ''Completed'' AND o.ORDER_DATE >= ''2024-10-01'' GROUP BY 1 ORDER BY 2 DESC LIMIT 5'
     ),
 
     REVENUE_BY_REGION_YTD AS (
       QUESTION 'What is the total revenue by customer region year-to-date?'
       ONBOARDING_QUESTION true
-      SQL 'SELECT c.REGION, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o JOIN __customers AS c ON o.CUSTOMER_ID = c.CUSTOMER_ID WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = YEAR(CURRENT_DATE) GROUP BY 1 ORDER BY 2 DESC'
+      SQL 'SELECT c.REGION, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o JOIN __customers AS c ON o.CUSTOMER_ID = c.CUSTOMER_ID WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = 2024 GROUP BY 1 ORDER BY 2 DESC'
     ),
 
     MONTHLY_REVENUE_TREND_LAST_12M AS (
       QUESTION 'Show me the monthly revenue trend for the last 12 months'
       ONBOARDING_QUESTION true
-      SQL 'SELECT DATE_TRUNC(''MONTH'', o.ORDER_DATE) AS month, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o WHERE o.STATUS = ''Completed'' AND o.ORDER_DATE >= DATEADD(MONTH, -12, CURRENT_DATE) GROUP BY 1 ORDER BY 1'
+      SQL 'SELECT DATE_TRUNC(''MONTH'', o.ORDER_DATE) AS month, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o WHERE o.STATUS = ''Completed'' AND o.ORDER_DATE >= ''2024-01-01'' GROUP BY 1 ORDER BY 1'
     ),
 
     TOP_10_PRODUCTS_BY_UNITS AS (
       QUESTION 'Which are the top 10 best-selling products by units sold this year?'
-      SQL 'SELECT p.PRODUCT_NAME, p.CATEGORY, SUM(o.QUANTITY) AS units_sold FROM __orders AS o JOIN __products AS p ON o.PRODUCT_ID = p.PRODUCT_ID WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = YEAR(CURRENT_DATE) GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10'
+      SQL 'SELECT p.PRODUCT_NAME, p.CATEGORY, SUM(o.QUANTITY) AS units_sold FROM __orders AS o JOIN __products AS p ON o.PRODUCT_ID = p.PRODUCT_ID WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = 2024 GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10'
     ),
 
     RETURN_RATE_BY_CATEGORY AS (
@@ -272,13 +272,13 @@ CREATE OR REPLACE SEMANTIC VIEW RETAILIQ_SV
 
     TOP_STORES_BY_REVENUE AS (
       QUESTION 'What are the top 10 stores by revenue this year?'
-      SQL 'SELECT s.STORE_NAME, s.REGION, s.STORE_TYPE, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o JOIN __stores AS s ON o.STORE_ID = s.STORE_ID WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = YEAR(CURRENT_DATE) GROUP BY 1, 2, 3 ORDER BY 4 DESC LIMIT 10'
+      SQL 'SELECT s.STORE_NAME, s.REGION, s.STORE_TYPE, SUM(o.TOTAL_AMOUNT) AS revenue FROM __orders AS o JOIN __stores AS s ON o.STORE_ID = s.STORE_ID WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = 2024 GROUP BY 1, 2, 3 ORDER BY 4 DESC LIMIT 10'
     ),
 
     REVENUE_BY_CHANNEL_YTD AS (
       QUESTION 'What is the total revenue by channel year to date?'
       ONBOARDING_QUESTION true
-      SQL 'SELECT o.CHANNEL, SUM(o.TOTAL_AMOUNT) AS revenue, COUNT(DISTINCT o.ORDER_ID) AS order_count FROM __orders AS o WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = YEAR(CURRENT_DATE) GROUP BY 1 ORDER BY 2 DESC'
+      SQL 'SELECT o.CHANNEL, SUM(o.TOTAL_AMOUNT) AS revenue, COUNT(DISTINCT o.ORDER_ID) AS order_count FROM __orders AS o WHERE o.STATUS = ''Completed'' AND YEAR(o.ORDER_DATE) = 2024 GROUP BY 1 ORDER BY 2 DESC'
     )
   );
 

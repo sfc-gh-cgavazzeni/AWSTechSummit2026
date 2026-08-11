@@ -26,8 +26,31 @@ LS @RETAILIQ_STG;
 -- ==================================================================================
 -- LOAD: ORDERS (~50,000 rows)
 -- ==================================================================================
+-- NOTE: CSV column order is: order_id, customer_id, product_id, store_id, order_date,
+--       quantity, unit_price, discount_pct($8), total_amount($9), channel, status,
+--       return_flag, shipping_days
+-- Table column order has TOTAL_AMOUNT before DISCOUNT_PCT, so we must map explicitly.
 COPY INTO ORDERS
-    FROM @RETAILIQ_STG/orders.csv
+    (ORDER_ID, CUSTOMER_ID, PRODUCT_ID, STORE_ID, ORDER_DATE,
+     QUANTITY, UNIT_PRICE, TOTAL_AMOUNT, DISCOUNT_PCT, CHANNEL,
+     STATUS, RETURN_FLAG, SHIPPING_DAYS)
+    FROM (
+        SELECT
+            t.$1,   -- order_id
+            t.$2,   -- customer_id
+            t.$3,   -- product_id
+            t.$4,   -- store_id
+            t.$5,   -- order_date
+            t.$6,   -- quantity
+            t.$7,   -- unit_price
+            t.$9,   -- total_amount  (CSV col 9 → table col TOTAL_AMOUNT)
+            t.$8,   -- discount_pct  (CSV col 8 → table col DISCOUNT_PCT)
+            t.$10,  -- channel
+            t.$11,  -- status
+            t.$12,  -- return_flag
+            t.$13   -- shipping_days
+        FROM @RETAILIQ_STG/orders.csv t
+    )
     FILE_FORMAT = (
         TYPE = 'CSV'
         FIELD_DELIMITER = ','
