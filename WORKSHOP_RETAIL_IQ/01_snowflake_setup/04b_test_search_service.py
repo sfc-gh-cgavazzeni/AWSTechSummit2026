@@ -10,6 +10,12 @@ import json
 
 session = get_active_session()
 
+# Set the correct role and context
+session.sql("USE ROLE RETAILIQ_ROLE").collect()
+session.sql("USE DATABASE RETAILIQ_DB").collect()
+session.sql("USE SCHEMA ANALYTICS").collect()
+session.sql("USE WAREHOUSE RETAILIQ_WH").collect()
+
 # ==================================================================================
 # TEST 1: Semantic search on Customer Reviews
 # ==================================================================================

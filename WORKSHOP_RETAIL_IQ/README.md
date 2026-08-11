@@ -450,6 +450,8 @@ Here's an example of what the "Add Verified Queries" screen looks like:
 
 *You enter a natural language question, write the correct SQL (logical query), test it on the right panel, then click "Save and continue" to persist it as ground-truth. In production, start with auto-generated SQL, validate it, then iteratively add VQs for your highest-volume questions.*
 
+> **Note:** Have a look at the suggestions proposed by Cortex Analyst — it will recommend additional metrics and dimensions to add to the semantic view (e.g. customer lifetime value, cohort analysis, etc.). In a real project you would iteratively enrich your SV based on these suggestions. For today's workshop, we don't need to complete all of them — our focus is on showing the full end-to-end journey from Snowflake Cortex Agents to AWS Bedrock AgentCore via MCP.
+
 ---
 
 ### Module 3 — Cortex Search `[10 min]`
@@ -530,11 +532,11 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
    - Semantic View: select `RETAILIQ_SV`
    - Name: `RetailIQ_Analyst`
    - Description: `Structured analytics tool for RetailIQ sales, orders, customers and stores data. Use for quantitative questions about revenue, conversion rates, order volumes, customer segments, regional performance, product categories, and time-series trends.`
-   - Warehouse: leave as "User's default"
+   - Warehouse: select `RETAILIQ_WH` (do not leave as "User's default" — the agent needs a warehouse with access to the data)
    - Query timeout: leave as `600`
    - Click **"Add"**
 
-   ![Add Cortex Analyst tool](assets/analyst_tool.jpg)
+   <img src="assets/analyst_tool.jpg" width="700">
 
    **Search documents and unstructured data** — click **"+ Add search service"** twice:
    - First service:
@@ -567,15 +569,35 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
    *(Leave Web search OFF, Code Execution tool ON by default)*
 
-7. Click the **General** tab and set the **Query Warehouse** to `RETAILIQ_WH`
+7. Click the **Instructions** tab and add the following system prompt:
 
-8. Click **"Save"** to save the agent configuration
+   ```
+   You are RetailIQ, a business intelligence assistant for an Italian retail company.
 
-9. Click **"Publish"** — this creates a versioned release from your draft. Check **"Use this version"** to send traffic to it, then click **Publish**.
+   When answering questions:
+   - Always combine structured data (from Analyst) with qualitative insights (from Search) when both are relevant.
+   - Format currency values in EUR (€) with thousand separators.
+   - When presenting tables, include a brief narrative summary highlighting key insights.
+   - If the user asks about customer sentiment or feedback, query BOTH the reviews search AND the analyst tool to correlate satisfaction with sales metrics.
+   - For regional analysis, default to customer region unless the user specifies store region.
+   - Respond in the same language as the user's question (Italian or English).
+   ```
+
+   > **Why Instructions matter:** Instructions guide the agent's orchestration logic — how it decides which tools to call, in what order, and how to synthesize results. Good instructions dramatically improve multi-tool coordination (e.g., combining a revenue query from Analyst with sentiment from Search in a single coherent answer).
+
+8. Still in the **Instructions** tab, review the **Budget** settings:
+   - **Max budget per message**: controls the maximum token spend per user turn (default: 4096). Higher values allow the agent to call more tools and produce longer answers but cost more credits. For this workshop, the default is fine.
+   - **Max tool calls per message**: limits how many tool invocations the agent can make in a single response (default: 5). This prevents runaway loops. Keep the default.
+
+   > **Tip:** In production, tune these values based on your use case complexity. A simple Q&A agent can work with 2048 tokens and 3 tool calls. A complex multi-tool orchestration (like ours) benefits from higher limits.
+
+9. Click **"Save"** to save the agent configuration
+
+10. Click **"Publish"** — this creates a versioned release from your draft. Check **"Use this version"** to send traffic to it, then click **Publish**.
 
 <img src="assets/agent_publish.jpg" width="330" height="330">
 
-10. After publishing, click **"Add to Snowflake CoWork"** to make the agent available in the CoWork conversational interface
+11. After publishing, click **"Add to Snowflake CoWork"** to make the agent available in the CoWork conversational interface
 
 
 **Step 4b — Open CoWork and select the agent**
