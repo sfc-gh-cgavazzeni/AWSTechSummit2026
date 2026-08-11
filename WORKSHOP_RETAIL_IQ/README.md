@@ -173,6 +173,8 @@ You can now open any SQL file directly from the workspace (it opens as a SQL wor
 
 In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 01_snowflake_setup` and click on **`01_setup_environment.sql`** to open it. Run it top to bottom.
 
+> **Important:** The script includes a `BEGIN...END` block that grants `RETAILIQ_ROLE` to your current user. If you're running statements one at a time (⌘+Enter), make sure to **select the entire BEGIN...END block** (all 4 lines) before executing. If you skip this, the Analyst UI will show "You do not have access to the role RETAILIQ_ROLE" later.
+
 This creates:
 
 - Role `RETAILIQ_ROLE` and user `retailiq_user`
@@ -420,6 +422,10 @@ SHOW SEMANTIC VIEWS LIKE 'RETAILIQ_SV' IN SCHEMA RETAILIQ_DB.ANALYTICS;
 
 Go back to **AI & ML → Cortex Analyst** in the left navigation sidebar. This time, select **RETAILIQ_SV** (the tuned version you just deployed).
 
+Since this Semantic View is owned by `RETAILIQ_ROLE` and you're currently using `ACCOUNTADMIN`, you'll see a "Semantic View Access" dialog. Select **"Switch to role RETAILIQ_ROLE"** and click **Switch role** — this switches your session to the role that owns the SV, giving you full edit access.
+
+<img src="assets/switchrole.jpg" width="420">
+
 Before opening the Playground, take a moment to look at the **left panel** — notice how much richer this Semantic View is compared to the basic one CoCo generated: you'll see custom **Metrics** (like `total_revenue`, `avg_order_value`), explicit **Relationships** with join conditions, business-specific **Dimensions** with synonyms, **Verified Queries** that serve as ground-truth examples, and **Custom Instructions** under the AI SQL Generation section that guide the model on how to interpret ambiguous terms, handle edge cases, and apply business logic (e.g., "revenue always means completed orders only", "when the user says 'region' default to customer region"). This is the difference between an auto-scaffolded SV and a production-tuned one.
 
 Now open the **Playground** tab and type:
@@ -434,23 +440,15 @@ Compare the results with what you got from the basic SV:
 
 - Synonyms mean "fatturato", "revenue", "sales" all work
 
-#### Step 2d — Tune Further: Add a Verified Query (5 min)
+#### Step 2d — Verified Queries (informational)
 
-In the Analyst UI, click on **RETAILIQ_SV** and select **Verified Queries** in the left panel, then click **+ Add** to create a new Verified Query:
+Verified Queries are the single most impactful tuning mechanism for Cortex Analyst. They allow you to lock in the exact SQL for your most important business questions — so next time Analyst sees a matching question pattern, it uses your validated SQL as-is instead of generating from scratch.
 
-- **Question:** "What is our return rate by product category?"
-
-- **SQL:** Write (or paste) the logical query that correctly answers this question — Cortex Analyst will show both the Logical and Physical query tabs
-
-- Click **Run** on the right panel ("Test query and verify") to validate the results are correct
-
-- Once satisfied, click **Save and continue** to lock it in
+Here's an example of what the "Add Verified Queries" screen looks like:
 
 <img src="assets/VQR.jpg" width="700" height="430">
 
-*The "Add Verified Queries" screen: enter the natural language question, write the correct SQL (logical query), test it on the right panel, then click "Save and continue" to persist it as ground-truth.*
-
-**Takeaway:** Verified Queries are the single most impactful tuning mechanism. They guarantee correct SQL for your most important business questions. Start with auto-generate to get a baseline, then iteratively add metrics, synonyms, and VQs.
+*You enter a natural language question, write the correct SQL (logical query), test it on the right panel, then click "Save and continue" to persist it as ground-truth. In production, start with auto-generated SQL, validate it, then iteratively add VQs for your highest-volume questions.*
 
 ---
 
@@ -622,35 +620,17 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 ### Module 5 — Snowflake Managed MCP Server `[10 min]`
 
-The MCP Server is the bridge between Snowflake and external AI clients (AWS Bedrock AgentCore, Claude, Cursor, etc.). You have **two architecture options** — choose the one that matches your integration pattern:
+In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and open **`01_create_mcp_server.sql`**.
 
-**Option A — Expose individual tools** (`01_create_mcp_server.sql`)
+```sql
+DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
+-- Copy the endpoint URL from the result — you'll need it for AWS
+```
 
-The external client (e.g., Bedrock AgentCore with Strands SDK) sees 3 separate tools and decides which one to call for each question.
-
-**Option B — Expose the Cortex Agent** (`01_create_mcp_server_agent.sql`) *(recommended)*
-
-The external client sees a single tool. Snowflake's Cortex Agent handles orchestration internally — tool selection, cross-tool reasoning, and answer synthesis all happen server-side.
-
-| | **Option A: Individual Tools** | **Option B: Agent as Tool** |
-|---|---|---|
-| **MCP tools exposed** | 3 (Analyst + 2 Search) | 1 (Agent) |
-| **Who decides which tool to call?** | The external client (Bedrock AgentCore / Strands) | Snowflake Cortex Agent |
-| **Cross-tool reasoning** | Client must call multiple tools and synthesize | Agent does it in one invocation |
-| **Governance & guardrails** | Client can bypass intended tool routing | Single governed endpoint, agent enforces boundaries |
-| **Best for...** | Clients that want fine-grained control over tool selection | Production apps that need a single governed interface |
-| **AgentCore integration** | Strands agent defines tool selection logic | Strands agent is a thin passthrough to Snowflake orchestration |
-
-In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and run **one** of the two scripts:
-
-- **`01_create_mcp_server.sql`** — Option A (individual tools)
-- **`01_create_mcp_server_agent.sql`** — Option B (agent as single tool)
-
-After running, execute the PAT Token creation section (in the same script):
+Also run the PAT Token creation section in the same script (`03_aws_setup/01_create_mcp_server.sql`):
 
 ```sql
 -- Save this token — it's shown only once!
-USE ROLE ACCOUNTADMIN;
 ALTER USER retailiq_user ADD PROGRAMMATIC ACCESS TOKEN retailiq_mcp_token 
   DAYS_TO_EXPIRY = 7 
   ROLE_RESTRICTION = 'RETAILIQ_ROLE';
@@ -658,7 +638,7 @@ ALTER USER retailiq_user ADD PROGRAMMATIC ACCESS TOKEN retailiq_mcp_token
 
 **What to save before the next module:**
 ```
-MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT
+MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/mcp/...
 PAT Token:         <token value shown once>
 Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)
 ```
@@ -696,60 +676,9 @@ python3 --version  # should be 3.11+
 
 ---
 
-### Module 7 — Test the MCP Server from AWS `[10 min]`
+### Module 7 — Strands Agent End-to-End `[10 min]`
 
-In this module you'll validate that the Snowflake MCP Server is accessible from AWS infrastructure. This proves the end-to-end connectivity that would be used in production by AWS Bedrock AgentCore, Strands agents, or any MCP-compatible client.
-
-**Step 7a — Quick validation from AWS CloudShell**
-
-Open **AWS CloudShell** (available in any AWS region — no EC2 needed, zero setup). Set your variables:
-
-```bash
-export ACCOUNT_URL="https://<your-account>.snowflakecomputing.com"
-export PAT="<your-pat-token>"
-export MCP_URL="${ACCOUNT_URL}/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT"
-```
-
-> **Note:** If your Snowflake account has a network policy, you'll need to allow the CloudShell outbound IP. Create a temporary user-level network policy:
-> ```sql
-> USE ROLE ACCOUNTADMIN;
-> CREATE NETWORK POLICY RETAILIQ_MCP_POLICY ALLOWED_IP_LIST = ('0.0.0.0/0')
->   COMMENT = 'Temporary open policy for MCP testing';
-> ALTER USER RETAILIQ_USER SET NETWORK_POLICY = RETAILIQ_MCP_POLICY;
-> ```
-> Remove it after testing:
-> ```sql
-> ALTER USER RETAILIQ_USER UNSET NETWORK_POLICY;
-> DROP NETWORK POLICY RETAILIQ_MCP_POLICY;
-> ```
-
-**Test 1 — Discover tools (tools/list):**
-
-```bash
-curl -s "$MCP_URL" \
-  -H "Authorization: Bearer $PAT" \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | python3 -m json.tool
-```
-
-You should see the `retailiq_agent` tool with its description. This confirms: authentication works, the MCP endpoint is reachable, and tool discovery is functional.
-
-**Test 2 — Invoke the agent (tools/call):**
-
-```bash
-curl -s "$MCP_URL" \
-  -H "Authorization: Bearer $PAT" \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"retailiq_agent","arguments":{"text":"What is the revenue by region?"}}}' | python3 -m json.tool
-```
-
-This calls the Cortex Agent through MCP. The agent orchestrates internally (selects Cortex Analyst, generates SQL, runs it) and returns the complete answer. Expected response time: 30-90 seconds (the agent runs multiple SQL queries under the hood).
-
-> **Key takeaway for AWS SAs:** This is the exact same protocol that Bedrock AgentCore uses. The MCP standard means you can swap the client (CloudShell → Bedrock → Claude → Cursor) without changing anything on the Snowflake side.
-
-**Step 7b — Strands Agent End-to-End (advanced)**
-
-On an EC2 instance (or locally with `pip install strands-agents strands-agents-tools-mcp`):
+On the EC2 instance:
 
 ```bash
 # The credentials are already injected from Secrets Manager
@@ -761,7 +690,7 @@ You'll see the welcome banner. Test with the sample questions from `help`:
 
 ```
 > What are the top 5 product categories by revenue this quarter?
-> Find support tickets about refund delays
+> What are customers saying about electronics?
 > Which regions have the most delivery complaints, and how does their revenue compare?
 ```
 

@@ -24,7 +24,9 @@ CREATE USER IF NOT EXISTS RETAILIQ_USER
 -- == Grant Role ==
 GRANT ROLE RETAILIQ_ROLE TO USER RETAILIQ_USER;
 GRANT ROLE RETAILIQ_ROLE TO ROLE ACCOUNTADMIN;
--- Grant to the current user (needed for the Analyst UI to allow switching to this role)
+
+-- !! IMPORTANT: Grant RETAILIQ_ROLE to YOUR user (required for Analyst UI role switching).
+-- Select this entire block (all 4 lines) and run it together:
 BEGIN
   LET usr := CURRENT_USER();
   EXECUTE IMMEDIATE 'GRANT ROLE RETAILIQ_ROLE TO USER ' || :usr;
