@@ -569,27 +569,31 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
    *(Leave Web search OFF, Code Execution tool ON by default)*
 
-7. Click the **Instructions** tab and add the following system prompt:
+7. Click the **Instructions** tab. You'll see two sections:
 
+   **Orchestration instructions** — paste:
    ```
    You are RetailIQ, a business intelligence assistant for an Italian retail company.
-
-   When answering questions:
-   - Always combine structured data (from Analyst) with qualitative insights (from Search) when both are relevant.
-   - Format currency values in EUR (€) with thousand separators.
-   - When presenting tables, include a brief narrative summary highlighting key insights.
    - If the user asks about customer sentiment or feedback, query BOTH the reviews search AND the analyst tool to correlate satisfaction with sales metrics.
+   - Always combine structured data (from Analyst) with qualitative insights (from Search) when both are relevant.
    - For regional analysis, default to customer region unless the user specifies store region.
-   - Respond in the same language as the user's question (Italian or English).
    ```
 
-   > **Why Instructions matter:** Instructions guide the agent's orchestration logic — how it decides which tools to call, in what order, and how to synthesize results. Good instructions dramatically improve multi-tool coordination (e.g., combining a revenue query from Analyst with sentiment from Search in a single coherent answer).
+   **Response instructions** — paste:
+   ```
+   - Format currency values in EUR (€) with thousand separators.
+   - When presenting tables, include a brief narrative summary highlighting key insights.
+   - Respond in the same language as the user's question (Italian or English).
+   - Keep answers concise but insightful — highlight anomalies, trends, and actionable takeaways.
+   ```
 
-8. Still in the **Instructions** tab, review the **Budget** settings:
-   - **Max budget per message**: controls the maximum token spend per user turn (default: 4096). Higher values allow the agent to call more tools and produce longer answers but cost more credits. For this workshop, the default is fine.
-   - **Max tool calls per message**: limits how many tool invocations the agent can make in a single response (default: 5). This prevents runaway loops. Keep the default.
+   > **Why two sections?** *Orchestration instructions* control **which tools** the agent calls and in what order (the "thinking" phase). *Response instructions* control **how** the final answer is formatted and presented to the user (the "output" phase). Separating them gives you precise control over agent behavior.
 
-   > **Tip:** In production, tune these values based on your use case complexity. A simple Q&A agent can work with 2048 tokens and 3 tool calls. A complex multi-tool orchestration (like ours) benefits from higher limits.
+8. Still in the **Instructions** tab, review the **Budget configuration (Optional)** section:
+   - **Time Limit (seconds)**: maximum execution time before the agent stops. Default is "No limit". For the workshop, leave as-is.
+   - **Token Limit**: maximum number of tokens the agent can consume in a single response. Default is "No limit". For the workshop, leave as-is.
+
+   > **Tip:** In production, set these limits to prevent runaway queries or excessive credit consumption. For example, a Time Limit of `60` seconds and a Token Limit of `4096` are reasonable guardrails for a customer-facing agent. Execution stops when any configured limit is reached.
 
 9. Click **"Save"** to save the agent configuration
 
@@ -606,14 +610,20 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 2. Select **CoWork** from the menu
 
-3. Click **"New Session"** (or the `+` button) to start a new conversation
+3. Click **"New Chat"** (top left) to start a new conversation
 
 4. In the agent selector dropdown, choose **RETAILIQ_CORTEX_AGENT**
+
+<img src="assets/cowork1.jpg" width="700">
 
 **Step 4c — Demo questions (run in this order to show progressive complexity)**
 
 1. `"What is the revenue by region?"`
    → **Analyst only** — generates SQL, returns structured table
+
+   <img src="assets/cowork2.jpg" width="700">
+
+   > **Expand the thinking panel** (click on the "thinking" or tool-call section) to inspect what happens behind the scenes: which tool was selected, the generated SQL, and how the agent interpreted your prompt. This is key to validate the orchestration path and confirm the semantic view is being used correctly.
 
 2. `"Top 5 product categories by number of orders"`
    → **Analyst only** — SQL aggregation with ranking
@@ -642,7 +652,13 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 ### Module 5 — Snowflake Managed MCP Server `[10 min]`
 
-In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and open **`01_create_mcp_server.sql`**.
+In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and open **`01_create_mcp_server.sql`** — but do not run all statements in a row. Here we need some edits.
+
+First, you need your account locator. Click on the **bottom-left circle** in Snowsight → **Account** → **Account details** and copy the account locator value.
+
+<img src="assets/account_details.jpg" width="400">
+
+Then edit the script replacing `YOUR_ACCOUNT_LOCATOR` with the value you just copied. Now open the folder `03_aws_setup` in your workspace, open `01_create_mcp_server.sql` and run it line by line until the MCP Server verification step:
 
 ```sql
 DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
@@ -680,7 +696,7 @@ Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)
 3. Fill in parameters:
    - `SnowflakeMCPEndpoint`: the URL from Module 5
    - `SnowflakePATToken`: the PAT token from Module 5
-   - `SnowflakeAccountLocator`: your account locator
+   - `SnowflakeAccountLocator`: your account locator (from Module 5)
    - `KeyPairName`: an existing EC2 key pair
    - `SubnetId` / `VpcId`: a public subnet in any VPC
 
