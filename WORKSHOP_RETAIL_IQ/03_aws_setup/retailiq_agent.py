@@ -317,7 +317,7 @@ class ToolCallPrinter:
         "retailiq_tickets_search":   "Cortex Search   (tickets corpus)",
     }
 
-    def __call__(self, event: dict[str, Any]) -> None:
+    def __call__(self, **event: Any) -> None:
         tool_name = event.get("tool_name") or event.get("name", "")
         if tool_name:
             label = self._TOOL_LABELS.get(tool_name, tool_name)
