@@ -68,8 +68,8 @@ BEDROCK_MODEL_ID: str = (
 )
 
 AWS_REGION: str = (
-    "us-east-1"
-    # TODO: change to match your AWS account's primary region if different
+    os.environ.get("AWS_DEFAULT_REGION", "eu-central-1")
+    # Uses the instance's region (set by CloudFormation) or defaults to Frankfurt
 )
 
 SECRETS_MANAGER_SECRET_NAME: str = "retailiq-workshop-credentials"

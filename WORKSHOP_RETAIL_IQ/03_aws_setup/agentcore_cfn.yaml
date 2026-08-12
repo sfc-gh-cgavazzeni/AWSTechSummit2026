@@ -1,44 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  RetailIQ Workshop - AWS Bedrock AgentCore Environment
-  Deploys an EC2 instance pre-configured with Strands, the Snowflake MCP client,
-  and all credentials stored in AWS Secrets Manager.
-  For use with the Snowflake + AWS Bedrock AgentCore integration workshop.
-
-# ============================================================
-# METADATA
-# ============================================================
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label:
-          default: "Snowflake Connection"
-        Parameters:
-          - SnowflakeMCPEndpoint
-          - SnowflakePATToken
-          - SnowflakeAccountLocator
-      - Label:
-          default: "EC2 Configuration"
-        Parameters:
-          - KeyPairName
-          - SubnetId
-          - VpcId
-          - AllowedCIDR
-    ParameterLabels:
-      SnowflakeMCPEndpoint:
-        default: "Snowflake MCP Server Endpoint URL"
-      SnowflakePATToken:
-        default: "Snowflake Programmatic Access Token"
-      SnowflakeAccountLocator:
-        default: "Snowflake Account Locator"
-      KeyPairName:
-        default: "EC2 Key Pair Name"
-      SubnetId:
-        default: "Public Subnet ID"
-      VpcId:
-        default: "VPC ID"
-      AllowedCIDR:
-        default: "Allowed CIDR for SSH Access"
+  RetailIQ Workshop - AWS Bedrock AgentCore Environment.
+  Self-contained stack: creates a VPC, public subnet, Internet Gateway, and an
+  EC2 instance pre-configured with Strands SDK, connected via SSM Session Manager.
+  Snowflake MCP credentials are stored in AWS Secrets Manager.
 
 # ============================================================
 # PARAMETERS
@@ -47,56 +12,30 @@ Parameters:
   SnowflakeMCPEndpoint:
     Type: String
     Description: >
-      The full URL of your Snowflake Managed MCP Server endpoint.
-      Obtain this by running: DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
-      Example: https://abc12345.snowflakecomputing.com/mcp/sse/RETAILIQ_DB/PUBLIC/RETAILIQ_MCP_SERVER
+      Snowflake MCP Server endpoint URL.
+      Get it from: DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER_AGENT;
     AllowedPattern: "^https://.*snowflakecomputing\\.com/.*$"
-    ConstraintDescription: "Must be a valid Snowflake MCP endpoint URL (https://...snowflakecomputing.com/...)"
+    ConstraintDescription: "Must be a valid Snowflake MCP endpoint URL"
 
   SnowflakePATToken:
     Type: String
     Description: >
-      Your Snowflake Programmatic Access Token (PAT).
-      Generate one via: ALTER USER <username> ADD PROGRAMMATIC ACCESS TOKEN RetailIQ_Token;
+      Snowflake Programmatic Access Token (PAT).
+      Generate via: ALTER USER retailiq_user ADD PROGRAMMATIC ACCESS TOKEN ...
     NoEcho: true
     MinLength: 10
-    ConstraintDescription: "PAT token must be at least 10 characters"
 
   SnowflakeAccountLocator:
     Type: String
     Description: >
-      Your Snowflake account locator (e.g., ABC12345 or ABC12345.us-east-1).
-      Find it in Snowsight under Admin > Accounts.
+      Snowflake account locator (e.g. SFSEEUROPE-DEMO_CGAVAZZENI).
+      Find in Snowsight: bottom-left circle → Account → Account details.
     AllowedPattern: "^[A-Za-z0-9._-]+$"
-    ConstraintDescription: "Account locator can only contain alphanumeric characters, dots, hyphens, and underscores"
-
-  KeyPairName:
-    Type: AWS::EC2::KeyPair::KeyName
-    Description: Name of an existing EC2 key pair for SSH access to the instance
-
-  SubnetId:
-    Type: AWS::EC2::Subnet::Id
-    Description: ID of a public subnet in which to launch the EC2 instance
-
-  VpcId:
-    Type: AWS::EC2::VPC::Id
-    Description: ID of the VPC containing the selected subnet
-
-  AllowedCIDR:
-    Type: String
-    Default: "0.0.0.0/0"
-    Description: >
-      CIDR block allowed to SSH into the EC2 instance.
-      Restrict this to your IP address (e.g., 203.0.113.0/32) for production use.
-    AllowedPattern: "^(\\d{1,3}\\.){3}\\d{1,3}/\\d{1,2}$"
-    ConstraintDescription: "Must be a valid CIDR notation (e.g., 10.0.0.0/16)"
 
   AmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
-    Description: >
-      Amazon Linux 2023 AMI ID resolved via SSM Parameter Store.
-      Leave as default to always use the latest AL2023 AMI in your region.
+    Description: Amazon Linux 2023 AMI (leave default)
 
 # ============================================================
 # RESOURCES
@@ -104,33 +43,109 @@ Parameters:
 Resources:
 
   # ----------------------------------------------------------
-  # SECRETS MANAGER — store Snowflake credentials securely
+  # VPC + NETWORKING (fully self-contained)
+  # ----------------------------------------------------------
+  WorkshopVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "RetailIQ-Workshop-VPC-${AWS::StackName}"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "RetailIQ-Workshop-IGW-${AWS::StackName}"
+
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref WorkshopVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref WorkshopVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "RetailIQ-Workshop-PublicSubnet-${AWS::StackName}"
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref WorkshopVPC
+      Tags:
+        - Key: Name
+          Value: !Sub "RetailIQ-Workshop-RT-${AWS::StackName}"
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IGWAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # ----------------------------------------------------------
+  # SECURITY GROUP (outbound only — no inbound SSH needed)
+  # ----------------------------------------------------------
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RetailIQ Workshop - outbound HTTPS only (SSM + Snowflake)
+      VpcId: !Ref WorkshopVPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS outbound (AWS APIs, Snowflake MCP, SSM)
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP outbound (package repos)
+      Tags:
+        - Key: Name
+          Value: !Sub "RetailIQ-Workshop-SG-${AWS::StackName}"
+
+  # ----------------------------------------------------------
+  # SECRETS MANAGER
   # ----------------------------------------------------------
   SnowflakeCredentialsSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: retailiq-workshop-credentials
-      Description: Snowflake MCP credentials for the RetailIQ AgentCore workshop
+      Description: Snowflake MCP credentials for RetailIQ workshop
       SecretString: !Sub |
         {
           "snowflake_mcp_endpoint": "${SnowflakeMCPEndpoint}",
           "snowflake_pat_token": "${SnowflakePATToken}",
           "snowflake_account": "${SnowflakeAccountLocator}"
         }
-      Tags:
-        - Key: Workshop
-          Value: RetailIQ-AgentCore
-        - Key: ManagedBy
-          Value: CloudFormation
 
   # ----------------------------------------------------------
-  # IAM ROLE — EC2 instance permissions
+  # IAM ROLE
   # ----------------------------------------------------------
-  RetailIQInstanceRole:
+  InstanceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "RetailIQ-Workshop-EC2-Role-${AWS::StackName}"
-      Description: IAM role for the RetailIQ workshop EC2 instance
+      RoleName: !Sub "RetailIQ-EC2-Role-${AWS::StackName}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -139,110 +154,54 @@ Resources:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-        # SSM Session Manager — enables browser-based SSH without a key pair
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
       Policies:
-        - PolicyName: RetailIQBedrockAgentCorePolicy
+        - PolicyName: SecretsAndLogs
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              # Bedrock model invocation
-              - Sid: BedrockInvokeModel
-                Effect: Allow
-                Action:
-                  - bedrock:InvokeModel
-                  - bedrock:InvokeModelWithResponseStream
-                  - bedrock:GetFoundationModel
-                  - bedrock:ListFoundationModels
-                Resource: "*"
-              # Bedrock AgentCore operations
-              - Sid: BedrockAgentCore
-                Effect: Allow
-                Action:
-                  - bedrock-agentcore:*
-                Resource: "*"
-              # Read workshop credentials from Secrets Manager
-              - Sid: SecretsManagerRead
-                Effect: Allow
+              - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
                   - secretsmanager:DescribeSecret
                 Resource: !Ref SnowflakeCredentialsSecret
-              # CloudWatch Logs — agent telemetry
-              - Sid: CloudWatchLogs
-                Effect: Allow
+              - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/retailiq/*"
-      Tags:
-        - Key: Workshop
-          Value: RetailIQ-AgentCore
 
-  RetailIQInstanceProfile:
+  InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      InstanceProfileName: !Sub "RetailIQ-Workshop-InstanceProfile-${AWS::StackName}"
       Roles:
-        - !Ref RetailIQInstanceRole
-
-  # ----------------------------------------------------------
-  # SECURITY GROUP
-  # ----------------------------------------------------------
-  RetailIQSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "RetailIQ-Workshop-SG-${AWS::StackName}"
-      GroupDescription: Security group for the RetailIQ AgentCore workshop EC2 instance
-      VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - Description: SSH access from allowed CIDR
-          IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: !Ref AllowedCIDR
-      SecurityGroupEgress:
-        - Description: HTTPS outbound (AWS APIs, Snowflake MCP)
-          IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: "0.0.0.0/0"
-        - Description: HTTP outbound (package repositories)
-          IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: "0.0.0.0/0"
-      Tags:
-        - Key: Name
-          Value: !Sub "RetailIQ-Workshop-SG-${AWS::StackName}"
-        - Key: Workshop
-          Value: RetailIQ-AgentCore
+        - !Ref InstanceRole
 
   # ----------------------------------------------------------
   # EC2 INSTANCE
   # ----------------------------------------------------------
-  RetailIQWorkshopInstance:
+  WorkshopInstance:
     Type: AWS::EC2::Instance
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT10M
     Properties:
-      InstanceType: t3.medium
+      InstanceType: t3.micro
       ImageId: !Ref AmiId
-      KeyName: !Ref KeyPairName
-      SubnetId: !Ref SubnetId
-      IamInstanceProfile: !Ref RetailIQInstanceProfile
-      SecurityGroupIds:
-        - !Ref RetailIQSecurityGroup
+      IamInstanceProfile: !Ref InstanceProfile
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
+          AssociatePublicIpAddress: true
+          GroupSet:
+            - !Ref InstanceSecurityGroup
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
             VolumeSize: 20
             VolumeType: gp3
-            DeleteOnTermination: true
             Encrypted: true
       Tags:
         - Key: Name
@@ -255,205 +214,82 @@ Resources:
           set -euxo pipefail
           exec > /var/log/retailiq-setup.log 2>&1
 
-          # ── Signal helper ──────────────────────────────────────────
-          # Will send SUCCESS or FAILURE to CloudFormation at the end
           signal_cfn() {
-            /opt/aws/bin/cfn-signal \
-              --exit-code $1 \
+            /opt/aws/bin/cfn-signal --exit-code $1 \
               --stack "${AWS::StackName}" \
-              --resource RetailIQWorkshopInstance \
+              --resource WorkshopInstance \
               --region "${AWS::Region}"
           }
           trap 'signal_cfn $?' EXIT
 
-          # ── 1. System update ───────────────────────────────────────
-          echo "==> Updating system packages..."
+          # ── System update ──
           dnf update -y
+          dnf install -y python3.11 python3.11-pip python3.11-devel git
 
-          # ── 2. cfn-bootstrap tools ─────────────────────────────────
-          dnf install -y python3-pip aws-cfn-bootstrap
-          pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz || true
-
-          # ── 3. Python 3.11 ─────────────────────────────────────────
-          echo "==> Installing Python 3.11..."
-          dnf install -y python3.11 python3.11-pip python3.11-devel
-          # Make python3.11 the default python3
-          alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
-          alternatives --set python3 /usr/bin/python3.11
-
-          # ── 4. Core Python dependencies ────────────────────────────
-          echo "==> Installing Python packages..."
+          # ── Python packages ──
           python3.11 -m pip install --upgrade pip
-
-          # Strands Agents framework (AWS open-source orchestration)
           python3.11 -m pip install strands-agents strands-agents-tools
+          python3.11 -m pip install boto3 httpx requests rich
 
-          # AWS SDK and CLI
-          python3.11 -m pip install boto3 botocore awscli
-
-          # Bedrock AgentCore Starter Toolkit
-          # NOTE: Install the official toolkit once released to PyPI.
-          # Uncomment the line below if available:
-          # python3.11 -m pip install bedrock-agentcore-starter-toolkit
-          # For now, installing the preview package if available:
-          python3.11 -m pip install bedrock-agentcore || echo "bedrock-agentcore not yet on PyPI — skipping"
-
-          # Additional utilities
-          python3.11 -m pip install httpx requests rich
-
-          # ── 5. Workshop directory structure ────────────────────────
-          echo "==> Creating /opt/retailiq workspace..."
-          mkdir -p /opt/retailiq/{logs,config}
+          # ── Workspace ──
+          mkdir -p /opt/retailiq/logs
           chmod 755 /opt/retailiq
 
-          # ── 6. config.py — reads credentials from Secrets Manager ──
+          # ── Download agent script from GitHub ──
+          curl -fsSL -o /opt/retailiq/retailiq_agent.py \
+            "https://raw.githubusercontent.com/sfc-gh-cgavazzeni/AWSTechSummit2026/main/WORKSHOP_RETAIL_IQ/03_aws_setup/retailiq_agent.py"
+
+          # ── Config loader ──
           cat > /opt/retailiq/config.py << 'PYEOF'
-          """
-          RetailIQ Workshop — Configuration loader
-          Reads Snowflake credentials from AWS Secrets Manager at runtime.
-          """
-          import boto3
-          import json
-          import os
-          import logging
+          import boto3, json, os
 
-          logger = logging.getLogger(__name__)
+          SECRET_NAME = os.environ.get("RETAILIQ_SECRET", "retailiq-workshop-credentials")
+          REGION = os.environ.get("AWS_DEFAULT_REGION", "${AWS::Region}")
 
-          SECRET_NAME = "retailiq-workshop-credentials"
-          AWS_REGION  = os.environ.get("AWS_DEFAULT_REGION", "${AWS::Region}")
+          def load_credentials():
+              client = boto3.client("secretsmanager", region_name=REGION)
+              secret = json.loads(client.get_secret_value(SecretId=SECRET_NAME)["SecretString"])
+              return secret
 
-          def load_credentials() -> dict:
-              """
-              Retrieve workshop credentials from Secrets Manager.
-              Returns a dict with keys:
-                - snowflake_mcp_endpoint
-                - snowflake_pat_token
-                - snowflake_account
-              """
-              client = boto3.client("secretsmanager", region_name=AWS_REGION)
-              try:
-                  response = client.get_secret_value(SecretId=SECRET_NAME)
-                  secret   = json.loads(response["SecretString"])
-                  logger.info("Credentials loaded from Secrets Manager: %s", SECRET_NAME)
-                  return secret
-              except client.exceptions.ResourceNotFoundException:
-                  raise RuntimeError(
-                      f"Secret '{SECRET_NAME}' not found in region {AWS_REGION}. "
-                      "Has the CloudFormation stack deployed successfully?"
-                  )
-              except Exception as exc:
-                  raise RuntimeError(f"Failed to retrieve credentials: {exc}") from exc
-
-          # Convenience accessors
-          def get_mcp_endpoint() -> str:
+          def get_mcp_endpoint():
               return load_credentials()["snowflake_mcp_endpoint"]
 
-          def get_pat_token() -> str:
+          def get_pat_token():
               return load_credentials()["snowflake_pat_token"]
 
-          def get_account_locator() -> str:
+          def get_account_locator():
               return load_credentials()["snowflake_account"]
           PYEOF
 
-          chmod 644 /opt/retailiq/config.py
-
-          # ── 7. Workshop README ─────────────────────────────────────
-          cat > /opt/retailiq/README.txt << 'TXTEOF'
-          =====================================================
-           RetailIQ AgentCore Workshop — Quick Start
-          =====================================================
-
-          Your environment is ready. Here is how to run the agent:
-
-          1. Upload the agent file:
-               scp -i <your-key.pem> retailiq_agent.py ec2-user@<this-host>:/opt/retailiq/
-
-          2. Run the agent:
-               cd /opt/retailiq
-               python3.11 retailiq_agent.py
-
-          3. Credentials are loaded automatically from AWS Secrets Manager.
-             Secret name: retailiq-workshop-credentials
-
-          Logs: /var/log/retailiq-setup.log (setup) | /opt/retailiq/logs/ (agent)
-          =====================================================
-          TXTEOF
-
-          # ── 8. Bash profile helpers ────────────────────────────────
+          # ── Bash shortcuts ──
           cat >> /home/ec2-user/.bashrc << 'BASHEOF'
-
-          # RetailIQ workshop shortcuts
           export RETAILIQ_HOME=/opt/retailiq
-          export AWS_DEFAULT_REGION=${AWS::Region}
           alias retailiq='cd /opt/retailiq && python3.11 retailiq_agent.py'
-          alias retailiq-logs='tail -f /var/log/retailiq-setup.log'
-          echo ""
-          echo "  RetailIQ Workshop Environment Ready"
-          echo "  Run: retailiq"
-          echo ""
+          echo "  RetailIQ Workshop Ready — run: retailiq"
           BASHEOF
 
-          chown ec2-user:ec2-user /home/ec2-user/.bashrc
-
-          # ── TODO: agent.py ─────────────────────────────────────────
-          # The main agent file (retailiq_agent.py) must be uploaded
-          # manually or via a deployment script.  See README.txt above.
-          # In a full pipeline, you would pull it from S3:
-          #   aws s3 cp s3://your-workshop-bucket/retailiq_agent.py /opt/retailiq/
-
-          echo "==> RetailIQ setup complete."
+          chown -R ec2-user:ec2-user /opt/retailiq
+          echo "==> Setup complete."
 
 # ============================================================
 # OUTPUTS
 # ============================================================
 Outputs:
   InstanceId:
-    Description: EC2 instance ID of the workshop machine
-    Value: !Ref RetailIQWorkshopInstance
-    Export:
-      Name: !Sub "${AWS::StackName}-InstanceId"
+    Description: EC2 Instance ID — use for SSM Session Manager connection
+    Value: !Ref WorkshopInstance
 
-  PublicDnsName:
-    Description: Public DNS name for SSH access (ssh -i <key.pem> ec2-user@<this-value>)
-    Value: !GetAtt RetailIQWorkshopInstance.PublicDnsName
-    Export:
-      Name: !Sub "${AWS::StackName}-PublicDnsName"
+  SSMConnectURL:
+    Description: Direct link to connect via SSM Session Manager
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${WorkshopInstance}?region=${AWS::Region}"
 
-  PublicIpAddress:
-    Description: Public IP address of the workshop EC2 instance
-    Value: !GetAtt RetailIQWorkshopInstance.PublicIp
-
-  SecretsManagerArn:
-    Description: ARN of the Secrets Manager secret holding Snowflake credentials
+  SecretArn:
+    Description: Secrets Manager ARN with Snowflake credentials
     Value: !Ref SnowflakeCredentialsSecret
-    Export:
-      Name: !Sub "${AWS::StackName}-SecretsArn"
 
-  IAMRoleArn:
-    Description: ARN of the IAM role attached to the EC2 instance
-    Value: !GetAtt RetailIQInstanceRole.Arn
-
-  WorkshopInstructions:
-    Description: Quick-start instructions for workshop participants
+  NextSteps:
+    Description: Quick-start instructions
     Value: !Sub |
-      ============================================================
-      RetailIQ Workshop — Next Steps
-      ============================================================
-
-      1. SSH into your instance:
-           ssh -i ${KeyPairName}.pem ec2-user@${RetailIQWorkshopInstance.PublicDnsName}
-
-      2. Upload the agent file (from your local machine):
-           scp -i ${KeyPairName}.pem retailiq_agent.py \
-               ec2-user@${RetailIQWorkshopInstance.PublicDnsName}:/opt/retailiq/
-
-      3. Run the RetailIQ agent:
-           cd /opt/retailiq
-           python3.11 retailiq_agent.py
-
-      Your Snowflake credentials are stored securely in:
-        AWS Secrets Manager: retailiq-workshop-credentials (${SnowflakeCredentialsSecret})
-
-      Account: ${SnowflakeAccountLocator}
-      Region:  ${AWS::Region}
-      ============================================================
+      1. Connect: AWS Console → EC2 → ${WorkshopInstance} → Connect → Session Manager
+      2. Run: cd /opt/retailiq && python3.11 retailiq_agent.py
+      3. Credentials auto-loaded from Secrets Manager

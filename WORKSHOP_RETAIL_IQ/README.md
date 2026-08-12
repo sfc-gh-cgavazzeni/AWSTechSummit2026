@@ -683,33 +683,67 @@ Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)
 
 **Key message:** The MCP endpoint is a standards-based interface. Any MCP client — Bedrock AgentCore, Claude Desktop, VS Code, your own app — can connect without any custom Snowflake SDK.
 
+#### MCP Server Option B — Agent as a single tool
+
+The MCP server we just created (`RETAILIQ_MCP_SERVER`) exposes **individual tools** (Analyst, Search Reviews, Search Tickets). This means the **external client** (e.g., Bedrock AgentCore) is responsible for orchestration — deciding which tools to call, in what order, and how to combine results.
+
+There's an alternative approach: expose the **Cortex Agent itself** as a single MCP tool. In this case, **Snowflake handles all orchestration** internally (tool selection, multi-hop reasoning, response synthesis), and the external client simply sends a question and receives a complete answer.
+
+| | Option A: Individual Tools | Option B: Agent as Tool |
+|---|---|---|
+| **MCP Server** | `RETAILIQ_MCP_SERVER` | `RETAILIQ_MCP_SERVER_AGENT` |
+| **Tools exposed** | 3 (analyst + 2 search) | 1 (the cortex agent) |
+| **Orchestration** | External (AWS Bedrock decides) | Internal (Snowflake Cortex Agent decides) |
+| **Best for** | Full control on AWS side, custom routing logic | Simplicity, governed responses, single entry point |
+| **Latency** | Multiple round-trips possible | Single call, Snowflake orchestrates internally |
+
+For the next module (AWS integration), we'll use **Option B** — the agent-as-tool approach — because it keeps the AWS side simple and lets Snowflake handle all the intelligence.
+
+Now open `03_aws_setup/01_create_mcp_server_agent.sql` in your workspace and run it:
+
+```sql
+-- Creates an MCP Server that wraps the entire Cortex Agent as a single tool
+CREATE OR REPLACE MCP SERVER RETAILIQ_MCP_SERVER_AGENT ...
+```
+
+After running, verify it with:
+```sql
+DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER_AGENT;
+```
+
 ---
 
 ### Module 6 — AWS Bedrock AgentCore Setup `[15 min]`
 
 **Deploy the CloudFormation stack:**
 
-1. Go to AWS Console → CloudFormation → Create Stack
+1. **Download the CloudFormation template locally:**
+   - If you have already cloned the repo: the file is at `03_aws_setup/agentcore_cfn.yaml`
+   - Otherwise, download from GitHub: go to `https://github.com/sfc-gh-cgavazzeni/AWSTechSummit2026`, navigate to `WORKSHOP_RETAIL_IQ/03_aws_setup/agentcore_cfn.yaml`, click **Raw**, then save (Ctrl+S / Cmd+S)
 
-2. Upload `03_aws_setup/agentcore_cfn.yaml`
+2. Go to **AWS Console** → make sure you are in the **eu-central-1 (Frankfurt)** region → **CloudFormation** → **Create Stack** → "With new resources"
 
-3. Fill in parameters:
-   - `SnowflakeMCPEndpoint`: the URL from Module 5
+3. Select **"Upload a template file"** and upload the `agentcore_cfn.yaml` file
+
+4. Fill in the 3 parameters:
+   - `SnowflakeMCPEndpoint`: the MCP endpoint URL from Module 5 (from `DESCRIBE MCP SERVER`)
    - `SnowflakePATToken`: the PAT token from Module 5
    - `SnowflakeAccountLocator`: your account locator (from Module 5)
-   - `KeyPairName`: an existing EC2 key pair
-   - `SubnetId` / `VpcId`: a public subnet in any VPC
 
-4. Acknowledge IAM creation and click Submit
+   > **Note:** The stack is fully self-contained — it creates its own VPC, public subnet, Internet Gateway, and security group. No pre-existing networking required.
 
-**Wait ~5 minutes** for the stack to complete.
+5. Acknowledge IAM creation and click **Submit**
 
-5. Go to Outputs → `Ec2ConnectionURL` → click to open AWS CloudShell or use EC2 Instance Connect
+**Wait ~5 minutes** for the stack to reach `CREATE_COMPLETE`.
+
+6. Connect to the instance via **SSM Session Manager**:
+   - Go to AWS Console → **EC2** → **Instances** → select the `RetailIQ-Workshop-...` instance
+   - Click **Connect** → **Session Manager** tab → **Connect**
 
 ```bash
 cd /opt/retailiq
 ls -la  # verify files are present
-python3 --version  # should be 3.11+
+python3.11 --version  # should be 3.11+
 ```
 
 ---
