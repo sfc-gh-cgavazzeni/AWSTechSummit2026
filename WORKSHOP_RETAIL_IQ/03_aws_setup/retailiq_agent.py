@@ -365,10 +365,7 @@ def run_interactive_session(agent: Agent) -> None:
         print("RetailIQ: ", end="", flush=True)
 
         try:
-            response = agent(
-                messages,
-                callback_handler=tool_printer,
-            )
+            response = agent(user_input)
 
             # Extract the text content from the response
             reply = _extract_text(response)
