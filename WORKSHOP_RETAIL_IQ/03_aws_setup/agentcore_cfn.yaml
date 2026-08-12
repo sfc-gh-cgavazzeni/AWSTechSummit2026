@@ -268,9 +268,19 @@ Resources:
           # ── Bash shortcuts ──
           cat >> /home/ec2-user/.bashrc << 'BASHEOF'
           export RETAILIQ_HOME=/opt/retailiq
+          export AWS_DEFAULT_REGION=${AWS::Region}
           alias retailiq='cd /opt/retailiq && python3.11 retailiq_agent.py'
           echo "  RetailIQ Workshop Ready — run: retailiq"
           BASHEOF
+
+          # Also for ssm-user (SSM Session Manager default user)
+          cat >> /home/ssm-user/.bashrc << 'BASHEOF' 2>/dev/null || true
+          export RETAILIQ_HOME=/opt/retailiq
+          export AWS_DEFAULT_REGION=${AWS::Region}
+          alias retailiq='cd /opt/retailiq && python3.11 retailiq_agent.py'
+          echo "  RetailIQ Workshop Ready — run: retailiq"
+          BASHEOF
+          mkdir -p /home/ssm-user && cp /home/ec2-user/.bashrc /home/ssm-user/.bashrc 2>/dev/null || true
 
           chown -R ec2-user:ec2-user /opt/retailiq
           echo "==> Setup complete."

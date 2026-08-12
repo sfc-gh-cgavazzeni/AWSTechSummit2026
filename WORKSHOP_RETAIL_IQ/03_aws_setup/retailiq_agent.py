@@ -250,17 +250,11 @@ def build_agent(mcp_endpoint: str, pat_token: str) -> Agent:
     # MCPClient connects to the server and discovers available tools
     snowflake_mcp = MCPClient(transport_callable)
 
-    # Bedrock client — uses the instance role credentials on EC2
-    bedrock_client = boto3.client(
-        service_name="bedrock-runtime",
-        region_name=AWS_REGION,
-    )
-
+    # Strands Agent — model ID string auto-resolves to Bedrock using instance role
     agent = Agent(
         model=BEDROCK_MODEL_ID,
         system_prompt=SYSTEM_PROMPT,
         tools=[snowflake_mcp],
-        client=bedrock_client,
     )
 
     return agent

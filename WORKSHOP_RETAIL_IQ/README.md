@@ -674,12 +674,27 @@ ALTER USER retailiq_user ADD PROGRAMMATIC ACCESS TOKEN retailiq_mcp_token
   ROLE_RESTRICTION = 'RETAILIQ_ROLE';
 ```
 
+**Create a user-level network policy** to allow external MCP access from AWS:
+
+```sql
+-- Required: bypasses the account-level VPN policy for the MCP service user
+CREATE OR REPLACE NETWORK POLICY RETAILIQ_USER_POLICY
+  ALLOWED_IP_LIST = ('0.0.0.0/0')
+  COMMENT = 'Allow retailiq_user MCP access from any IP (workshop)';
+
+ALTER USER retailiq_user SET NETWORK_POLICY = RETAILIQ_USER_POLICY;
+```
+
+> **Why?** Most Snowflake accounts have an account-level network policy that only allows corporate VPN IPs. The EC2 instance's IP won't be in that list. A user-level policy on `retailiq_user` overrides the account policy for that specific user only.
+
 **What to save before the next module:**
 ```
-MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/mcp/...
+MCP Endpoint URL:  https://YOUR_LOCATOR.snowflakecomputing.com/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT
 PAT Token:         <token value shown once>
 Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)
 ```
+
+> **Important:** In the MCP endpoint URL, if your account locator contains an underscore (e.g. `DEMO_CGAVAZZENI`), replace it with a **dash** in the hostname (e.g. `demo-cgavazzeni.snowflakecomputing.com`). SSL certificates don't support underscores in hostnames.
 
 **Key message:** The MCP endpoint is a standards-based interface. Any MCP client — Bedrock AgentCore, Claude Desktop, VS Code, your own app — can connect without any custom Snowflake SDK.
 
@@ -750,12 +765,11 @@ python3.11 --version  # should be 3.11+
 
 ### Module 7 — Strands Agent End-to-End `[10 min]`
 
-On the EC2 instance:
+On the EC2 instance (connected via SSM Session Manager):
 
 ```bash
-# The credentials are already injected from Secrets Manager
-# Just run the agent
-python3 retailiq_agent.py
+cd /opt/retailiq
+python3.11 retailiq_agent.py
 ```
 
 You'll see the welcome banner. Test with the sample questions from `help`:
