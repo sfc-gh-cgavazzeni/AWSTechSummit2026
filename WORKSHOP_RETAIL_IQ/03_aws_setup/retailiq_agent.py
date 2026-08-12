@@ -60,11 +60,11 @@ SNOWFLAKE_PAT_TOKEN: str = (
 )
 
 BEDROCK_MODEL_ID: str = (
-    "us.anthropic.claude-sonnet-4-5-v1:0"
-    # Claude Sonnet 4.5 via Bedrock cross-region inference profile.
+    "eu.anthropic.claude-sonnet-4-20250514-v1:0"
+    # Claude Sonnet 4 via Bedrock cross-region inference profile (EU).
     # Other options:
-    #   "us.anthropic.claude-3-5-sonnet-20241022-v2:0"  (Claude 3.5 Sonnet v2)
-    #   "us.anthropic.claude-3-7-sonnet-20250219-v1:0"  (Claude 3.7 Sonnet)
+    #   "eu.anthropic.claude-3-5-sonnet-20241022-v2:0"  (Claude 3.5 Sonnet v2)
+    #   "eu.anthropic.claude-3-7-sonnet-20250219-v1:0"  (Claude 3.7 Sonnet)
 )
 
 AWS_REGION: str = (
