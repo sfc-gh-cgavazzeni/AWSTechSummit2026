@@ -789,6 +789,10 @@ You'll see the welcome banner. Test with the sample questions from `help`:
 
 - How the agent synthesizes the answer
 
+<img src="assets/strands1.jpg" width="700">
+
+<img src="assets/strands2.jpg" width="700">
+
 **Multi-turn demo** (shows AgentCore Memory value):
 
 ```
