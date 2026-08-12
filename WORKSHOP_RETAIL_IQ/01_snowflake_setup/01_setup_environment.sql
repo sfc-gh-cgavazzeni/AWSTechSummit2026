@@ -70,5 +70,16 @@ CREATE STAGE IF NOT EXISTS RETAILIQ_STG
     COMMENT = 'Stage for loading RetailIQ CSV data files';
 
 -- ==================================================================================
+-- GRANTS FOR MCP ACCESS (needed when Cortex Agent is owned by ACCOUNTADMIN)
+-- Run these AFTER creating the agent (Module 4) — they enable retailiq_user
+-- to invoke the agent and access all underlying objects via MCP.
+-- ==================================================================================
+-- USE ROLE ACCOUNTADMIN;
+-- GRANT USAGE ON AGENT RETAILIQ_DB.ANALYTICS.RETAILIQ_CORTEX_AGENT TO ROLE RETAILIQ_ROLE;
+-- GRANT SELECT ON SEMANTIC VIEW RETAILIQ_DB.ANALYTICS.RETAILIQ_SV TO ROLE RETAILIQ_ROLE;
+-- GRANT SELECT ON ALL TABLES IN SCHEMA RETAILIQ_DB.ANALYTICS TO ROLE RETAILIQ_ROLE;
+-- GRANT USAGE ON ALL CORTEX SEARCH SERVICES IN SCHEMA RETAILIQ_DB.ANALYTICS TO ROLE RETAILIQ_ROLE;
+
+-- ==================================================================================
 -- END OF MODULE 0
 -- ==================================================================================

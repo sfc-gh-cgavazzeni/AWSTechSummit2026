@@ -12,7 +12,7 @@ creds = json.loads(sm.get_secret_value(SecretId="retailiq-workshop-credentials")
 MCP_URL = creds["snowflake_mcp_endpoint"]
 PAT = creds["snowflake_pat_token"]
 
-BEDROCK_MODEL = "eu.anthropic.claude-3-7-sonnet-20250219-v1:0"
+BEDROCK_MODEL = "eu.anthropic.claude-sonnet-4-6"
 
 
 def call_mcp_tool(question):

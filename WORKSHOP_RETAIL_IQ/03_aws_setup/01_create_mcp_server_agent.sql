@@ -29,9 +29,20 @@ tools:
 $$;
 
 -- ==================================================================================
+-- GRANT ACCESS: Allow RETAILIQ_ROLE to invoke the agent and its underlying objects
+-- (Required because the Cortex Agent is owned by ACCOUNTADMIN)
+-- ==================================================================================
+USE ROLE ACCOUNTADMIN;
+GRANT USAGE ON AGENT RETAILIQ_DB.ANALYTICS.RETAILIQ_CORTEX_AGENT TO ROLE RETAILIQ_ROLE;
+GRANT SELECT ON SEMANTIC VIEW RETAILIQ_DB.ANALYTICS.RETAILIQ_SV TO ROLE RETAILIQ_ROLE;
+GRANT SELECT ON ALL TABLES IN SCHEMA RETAILIQ_DB.ANALYTICS TO ROLE RETAILIQ_ROLE;
+GRANT USAGE ON ALL CORTEX SEARCH SERVICES IN SCHEMA RETAILIQ_DB.ANALYTICS TO ROLE RETAILIQ_ROLE;
+
+-- ==================================================================================
 -- VERIFICATION
 -- ==================================================================================
-DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER_AGENT;
+USE ROLE RETAILIQ_ROLE;
+SHOW MCP SERVERS IN SCHEMA RETAILIQ_DB.ANALYTICS;
 
 -- ==================================================================================
 -- END
