@@ -215,7 +215,7 @@ Resources:
           exec > /var/log/retailiq-setup.log 2>&1
 
           signal_cfn() {
-            /opt/aws/bin/cfn-signal --exit-code $1 \
+            /usr/bin/python3.9 /opt/aws/bin/cfn-signal --exit-code $1 \
               --stack "${AWS::StackName}" \
               --resource WorkshopInstance \
               --region "${AWS::Region}"
