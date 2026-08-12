@@ -186,9 +186,9 @@ Resources:
     Type: AWS::EC2::Instance
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
     Properties:
-      InstanceType: t3.micro
+      InstanceType: t3.small
       ImageId: !Ref AmiId
       IamInstanceProfile: !Ref InstanceProfile
       NetworkInterfaces:
