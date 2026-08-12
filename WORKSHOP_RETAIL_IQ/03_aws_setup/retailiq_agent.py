@@ -23,7 +23,7 @@ from typing import Any
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from strands import Agent
-from strands_tools.mcp_client import mcp_client
+from strands_tools.mcp_client import MCPClient, _create_transport_callable
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging
@@ -240,14 +240,15 @@ def build_agent(mcp_endpoint: str, pat_token: str) -> Agent:
         "Authorization": f"Bearer {pat_token}",
     }
 
-    # mcp_client from strands_tools creates an MCP session and surfaces all
-    # server-advertised tools as Strands-compatible tool objects.
-    # The SSE transport is used for the Snowflake Managed MCP Server.
-    snowflake_tools = mcp_client(
-        url=mcp_endpoint,
-        transport="sse",
+    # Create transport callable for Streamable HTTP with auth headers
+    transport_callable = _create_transport_callable(
+        "streamable_http",
+        server_url=mcp_endpoint,
         headers=auth_headers,
     )
+
+    # MCPClient connects to the server and discovers available tools
+    snowflake_mcp = MCPClient(transport_callable)
 
     # Bedrock client — uses the instance role credentials on EC2
     bedrock_client = boto3.client(
@@ -258,7 +259,7 @@ def build_agent(mcp_endpoint: str, pat_token: str) -> Agent:
     agent = Agent(
         model=BEDROCK_MODEL_ID,
         system_prompt=SYSTEM_PROMPT,
-        tools=[snowflake_tools],
+        tools=[snowflake_mcp],
         client=bedrock_client,
     )
 
