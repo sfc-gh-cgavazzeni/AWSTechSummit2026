@@ -23,7 +23,7 @@ from typing import Any
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from strands import Agent
-from strands_tools import mcp_client
+from strands_tools.mcp_client import mcp_client
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging
