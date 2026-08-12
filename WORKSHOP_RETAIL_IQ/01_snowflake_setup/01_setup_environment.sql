@@ -25,6 +25,12 @@ CREATE USER IF NOT EXISTS RETAILIQ_USER
 GRANT ROLE RETAILIQ_ROLE TO USER RETAILIQ_USER;
 GRANT ROLE RETAILIQ_ROLE TO ROLE ACCOUNTADMIN;
 
+-- == Network Policy for MCP access (required for PAT-based external connections) ==
+CREATE OR REPLACE NETWORK POLICY RETAILIQ_USER_POLICY
+  ALLOWED_IP_LIST = ('0.0.0.0/0')
+  COMMENT = 'Allow retailiq_user PAT access from any IP (required for MCP from AWS)';
+ALTER USER RETAILIQ_USER SET NETWORK_POLICY = RETAILIQ_USER_POLICY;
+
 -- !! IMPORTANT: Grant RETAILIQ_ROLE to YOUR user (required for Analyst UI role switching).
 -- Select this entire block (all 4 lines) and run it together:
 BEGIN
