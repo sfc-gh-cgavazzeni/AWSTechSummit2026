@@ -50,8 +50,8 @@ logger = logging.getLogger("retailiq")
 # ──────────────────────────────────────────────────────────────────────────────
 
 SNOWFLAKE_MCP_ENDPOINT: str = (
-    "https://YOUR_ACCOUNT_LOCATOR.snowflakecomputing.com/mcp/sse/RETAILIQ_DB/PUBLIC/RETAILIQ_MCP_SERVER"
-    # TODO: Replace with your endpoint from: DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
+    "https://YOUR_ACCOUNT_URL.snowflakecomputing.com/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT"
+    # Replace YOUR_ACCOUNT_URL with your account hostname (underscores → dashes)
 )
 
 SNOWFLAKE_PAT_TOKEN: str = (

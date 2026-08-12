@@ -658,12 +658,13 @@ First, you need your account locator. Click on the **bottom-left circle** in Sno
 
 <img src="assets/account_details.jpg" width="400">
 
-Then edit the script replacing `YOUR_ACCOUNT_LOCATOR` with the value you just copied. Now open the folder `03_aws_setup` in your workspace, open `01_create_mcp_server.sql` and run it line by line until the MCP Server verification step:
+Then edit the script replacing `YOUR_ACCOUNT_LOCATOR` with the value you just copied. Now open the folder `03_aws_setup` in your workspace, open `01_create_mcp_server.sql` and run it line by line.
 
-```sql
-DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER;
--- Copy the endpoint URL from the result — you'll need it for AWS
+The MCP Server endpoint URL follows a fixed pattern — no need to run DESCRIBE:
 ```
+https://<account_url>/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT
+```
+Where `<account_url>` is your account hostname with underscores replaced by dashes (e.g. `sfseeurope-demo-cgavazzeni.snowflakecomputing.com`).
 
 Also run the PAT Token creation section in the same script (`03_aws_setup/01_create_mcp_server.sql`):
 
@@ -723,7 +724,7 @@ CREATE OR REPLACE MCP SERVER RETAILIQ_MCP_SERVER_AGENT ...
 
 After running, verify it with:
 ```sql
-DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER_AGENT;
+SHOW MCP SERVERS IN SCHEMA RETAILIQ_DB.ANALYTICS;
 ```
 
 ---
@@ -741,7 +742,7 @@ DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER_AGENT;
 3. Select **"Upload a template file"** and upload the `agentcore_cfn.yaml` file
 
 4. Fill in the 3 parameters:
-   - `SnowflakeMCPEndpoint`: the MCP endpoint URL from Module 5 (from `DESCRIBE MCP SERVER`)
+   - `SnowflakeMCPEndpoint`: your MCP endpoint URL (see format above from Module 5)
    - `SnowflakePATToken`: the PAT token from Module 5
    - `SnowflakeAccountLocator`: your account locator (from Module 5)
 

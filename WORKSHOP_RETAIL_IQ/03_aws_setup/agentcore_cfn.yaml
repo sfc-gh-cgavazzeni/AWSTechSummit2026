@@ -13,7 +13,7 @@ Parameters:
     Type: String
     Description: >
       Snowflake MCP Server endpoint URL.
-      Get it from: DESCRIBE MCP SERVER RETAILIQ_MCP_SERVER_AGENT;
+      Format: https://<account_url>/api/v2/databases/RETAILIQ_DB/schemas/ANALYTICS/mcp-servers/RETAILIQ_MCP_SERVER_AGENT
     AllowedPattern: "^https://.*snowflakecomputing\\.com/.*$"
     ConstraintDescription: "Must be a valid Snowflake MCP endpoint URL"
 
