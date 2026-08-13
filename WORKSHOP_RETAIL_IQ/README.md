@@ -27,6 +27,8 @@ By the end of this workshop, you will have deployed a production-style AI agent 
 
 ![Architecture](assets/build1.jpg)
 
+> **Note:** In this workshop we use EC2 because it's more transparent for learning — you can SSH in, see the script, and debug manually. In production, **AWS Bedrock AgentCore** would be the recommended path: it removes the EC2 operational burden by providing a fully managed runtime for your Strands agent code with built-in scaling, session memory, and observability.
+
 ---
 
 ## Scenario: RetailIQ
@@ -317,6 +319,8 @@ When CoCo finishes generating the Semantic View, it will prompt you to **save it
 3. You'll see a list of available Semantic Views — click on **RETAILIQ_SV_BASIC** (the one CoCo just created)
 
    On the left panel of the Semantic View editor, you can view and edit the different components of the SV: **Tables**, **Relationships**, **Facts**, **Dimensions**, and **Metrics**. Notice how CoCo automatically recognized join keys between tables, identified numeric columns as potential facts/metrics, and categorized text/date columns as dimensions. This is a solid starting point, but it can be further improved by adding business-specific metric definitions, synonyms, filters, and verified queries — which is exactly what we'll do in Step 2b.
+
+<img src="assets/closecoco.jpg" width="700">
 
 4. Click the **Playground** tab at the top to open the interactive chat interface
 
