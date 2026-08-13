@@ -263,7 +263,7 @@ A Semantic View is a **business vocabulary layer** that sits between your raw ta
 
 - **Verified Queries** — pre-validated SQL for your most important KPIs
 
-**The key insight for SA architects:** *A Semantic View gives you full control over the vocabulary and logic the AI uses. The difference between a bare auto-generated SV and a tuned one with verified queries is the difference between a demo and a production deployment.*
+**The key insight for AWS Solution Architects:** *A Semantic View gives you full control over the vocabulary and logic the AI uses. The difference between a bare auto-generated SV and a tuned one with verified queries is the difference between a demo and a production deployment.*
 
 #### Step 2a — Build a Basic Semantic View with Cortex Code (10 min)
 
@@ -410,10 +410,6 @@ SHOW SEMANTIC VIEWS LIKE 'RETAILIQ_SV' IN SCHEMA RETAILIQ_DB.ANALYTICS;
 
 Go back to **AI & ML → Cortex Analyst** in the left navigation sidebar. This time, select **RETAILIQ_SV** (the tuned version you just deployed).
 
-Since this Semantic View is owned by `RETAILIQ_ROLE` and you're currently using `ACCOUNTADMIN`, you'll see a "Semantic View Access" dialog. Select **"Switch to role RETAILIQ_ROLE"** and click **Switch role** — this switches your session to the role that owns the SV, giving you full edit access.
-
-<img src="assets/switchrole.jpg" width="420">
-
 Before opening the Playground, take a moment to look at the **left panel** — notice how much richer this Semantic View is compared to the basic one CoCo generated: you'll see custom **Metrics** (like `total_revenue`, `avg_order_value`), explicit **Relationships** with join conditions, business-specific **Dimensions** with synonyms, **Verified Queries** that serve as ground-truth examples, and **Custom Instructions** under the AI SQL Generation section that guide the model on how to interpret ambiguous terms, handle edge cases, and apply business logic (e.g., "revenue always means completed orders only", "when the user says 'region' default to customer region"). This is the difference between an auto-scaffolded SV and a production-tuned one.
 
 Now open the **Playground** tab and type:
@@ -479,11 +475,12 @@ If you want to test the search services, open one of the following files from yo
 
 - **`04b_test_search_service.sql`** — SQL queries using `SEARCH_PREVIEW` with `PARSE_JSON` + `FLATTEN`
 - **`04b_test_search_service.py`** — Python version using Snowpark SQL
+  > **Note:** The first time you run a Python notebook in a Workspace, Snowflake needs to start a container runtime for execution. This can take 1-3 minutes — you'll see a loading indicator while the environment initializes. Subsequent runs in the same session will be instant.
 - **`04b_test_search_service_rest.py`** or **`04b_test_search_service_rest.sh`** — REST API version using PAT token authentication (same interface that external clients like AWS Strands Agents use)
 
 These demonstrate how the results match **semantically** — for example, "delivery problems" finds reviews mentioning slow shipping, lost packages, or courier issues, even if the exact phrase never appears. This is the power of hybrid search (BM25 + vector embeddings) vs. pure keyword matching.
 
-**Key message for SA architects:** Cortex Search is a **hybrid search** (full-text + vector embedding) with no infrastructure to manage. Zero vector database to deploy, zero embedding pipeline to maintain.
+**Key message for AWS Solution Architects:** Cortex Search is a **hybrid search** (full-text + vector embedding) with no infrastructure to manage. Zero vector database to deploy, zero embedding pipeline to maintain.
 
 ---
 
