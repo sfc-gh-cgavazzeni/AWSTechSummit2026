@@ -1,4 +1,4 @@
-# Enterprise AI Agents: Snowflake Cortex × AWS Bedrock AgentCore
+# Enterprise AI Agents: Snowflake Cortex × AWS Strands Agents
 ## Hands-On Workshop — AWS Tech Summit 2026
 
 **Duration:** 2 hours | **Audience:** AWS Solution Architects | **Format:** Pair labs
@@ -11,7 +11,7 @@
 
 The **Snowflake-managed MCP server** lets AI agents securely retrieve data from Snowflake accounts without needing to deploy separate infrastructure. You can configure the MCP server to serve Cortex Analyst and Cortex Search as tools on the standards-based interface. MCP clients discover and invoke these tools, and retrieve data required for the application. With managed MCP servers on Snowflake, you can build scalable enterprise-grade applications while maintaining access and privacy controls.
 
-**Amazon Bedrock AgentCore** is an agentic platform to build, deploy, and operate highly capable agents securely at scale. With AgentCore you can easily enable agents to take actions across tools and data, run agents securely with low-latency and extended runtimes, and monitor agents in production — all without any infrastructure management. AgentCore is comprised of fully-managed services that can be used together or independently and work with any framework (including CrewAI, LangGraph, LlamaIndex, Google ADK, OpenAI Agents SDK, and Strands Agents), as well as any foundation model — eliminating the choice between open-source flexibility and enterprise-grade security and reliability.
+**AWS Strands Agents** is an open-source SDK that takes a model-first approach to building AI agents. With Strands you define an agent by giving it a model, a set of tools, and a prompt — then the SDK handles the agentic loop, tool execution, and context management. Strands works with any foundation model on Amazon Bedrock and supports standard tool protocols including MCP, making it ideal for connecting to Snowflake's managed MCP servers.
 
 ---
 
@@ -23,25 +23,9 @@ By the end of this workshop, you will have deployed a production-style AI agent 
 
 2. Answers **qualitative questions** ("What are customers saying about delivery?") via **Cortex Search** over unstructured review and ticket data
 
-3. Orchestrates both capabilities through the **Snowflake Managed MCP Server**, exposed to **AWS Bedrock AgentCore** as a fully managed, multi-turn conversational agent
+3. Orchestrates both capabilities through the **Snowflake Managed MCP Server**, exposed to an **AWS Strands Agent** running on EC2 with **Amazon Bedrock** (Claude Sonnet 4.6) as the LLM inference layer
 
-```
-┌─────────────────────────────────────────────────────┐
-│              AWS Bedrock AgentCore                  │
-│   ┌──────────────────┐  ┌─────────────────────────┐ │
-│   │  Strands Agent   │  │  AgentCore Memory       │ │
-│   │  (Claude 3.5)    │◄─│  (multi-turn context)   │ │
-│   └────────┬─────────┘  └─────────────────────────┘ │
-└────────────┼────────────────────────────────────────┘
-             │  MCP over HTTPS + PAT Auth
-┌────────────▼────────────────────────────────────────┐
-│         Snowflake Managed MCP Server                │
-│  ┌─────────────────┐  ┌────────────────────────┐    │
-│  │  Cortex Analyst │  │  Cortex Search         │    │
-│  │  (Semantic View)│  │  (reviews + tickets)   │    │
-│  └─────────────────┘  └────────────────────────┘    │
-└─────────────────────────────────────────────────────┘
-```
+![Architecture](assets/build1.jpg)
 
 ---
 
@@ -97,7 +81,7 @@ RetailIQ is an Italian multi-channel retailer with 50 stores across Italy plus a
 | 3 | Cortex Search services | 10 min | `01_snowflake_setup/04_create_search_service.sql` |
 | 4 | Cortex Agent (native, in CoWork) | 15 min | `01_snowflake_setup/05_create_cortex_agent.sql` |
 | 5 | MCP Server + PAT Token | 10 min | `03_aws_setup/01_create_mcp_server.sql` |
-| 6 | AWS Bedrock AgentCore setup | 15 min | `03_aws_setup/agentcore_cfn.yaml` |
+| 6 | AWS Strands Agent setup | 15 min | `03_aws_setup/agentcore_cfn.yaml` |
 | 7 | Strands agent — end-to-end | 10 min | `03_aws_setup/retailiq_agent.py` |
 | 8 | Multi-turn demo + production patterns | 10 min | — |
 
@@ -450,7 +434,7 @@ Here's an example of what the "Add Verified Queries" screen looks like:
 
 *You enter a natural language question, write the correct SQL (logical query), test it on the right panel, then click "Save and continue" to persist it as ground-truth. In production, start with auto-generated SQL, validate it, then iteratively add VQs for your highest-volume questions.*
 
-> **Note:** Have a look at the suggestions proposed by Cortex Analyst — it will recommend additional metrics and dimensions to add to the semantic view (e.g. customer lifetime value, cohort analysis, etc.). In a real project you would iteratively enrich your SV based on these suggestions. For today's workshop, we don't need to complete all of them — our focus is on showing the full end-to-end journey from Snowflake Cortex Agents to AWS Bedrock AgentCore via MCP.
+> **Note:** Have a look at the suggestions proposed by Cortex Analyst — it will recommend additional metrics and dimensions to add to the semantic view (e.g. customer lifetime value, cohort analysis, etc.). In a real project you would iteratively enrich your SV based on these suggestions. For today's workshop, we don't need to complete all of them — our focus is on showing the full end-to-end journey from Snowflake Cortex Agents to AWS Strands Agents via MCP.
 
 ---
 
@@ -491,7 +475,7 @@ If you want to test the search services, open one of the following files from yo
 
 - **`04b_test_search_service.sql`** — SQL queries using `SEARCH_PREVIEW` with `PARSE_JSON` + `FLATTEN`
 - **`04b_test_search_service.py`** — Python version using Snowpark SQL
-- **`04b_test_search_service_rest.py`** or **`04b_test_search_service_rest.sh`** — REST API version using PAT token authentication (same interface that external clients like AWS Bedrock AgentCore use)
+- **`04b_test_search_service_rest.py`** or **`04b_test_search_service_rest.sh`** — REST API version using PAT token authentication (same interface that external clients like AWS Strands Agents use)
 
 These demonstrate how the results match **semantically** — for example, "delivery problems" finds reviews mentioning slow shipping, lost packages, or courier issues, even if the exact phrase never appears. This is the power of hybrid search (BM25 + vector embeddings) vs. pure keyword matching.
 
@@ -697,11 +681,11 @@ Account Locator:   YOUR_LOCATOR (bottom-left in Snowsight → Account Details)
 
 > **Important:** In the MCP endpoint URL, if your account locator contains an underscore (e.g. `DEMO_CGAVAZZENI`), replace it with a **dash** in the hostname (e.g. `demo-cgavazzeni.snowflakecomputing.com`). SSL certificates don't support underscores in hostnames.
 
-**Key message:** The MCP endpoint is a standards-based interface. Any MCP client — Bedrock AgentCore, Claude Desktop, VS Code, your own app — can connect without any custom Snowflake SDK.
+**Key message:** The MCP endpoint is a standards-based interface. Any MCP client — Strands Agents, Claude Desktop, VS Code, your own app — can connect without any custom Snowflake SDK.
 
 #### MCP Server Option B — Agent as a single tool
 
-The MCP server we just created (`RETAILIQ_MCP_SERVER`) exposes **individual tools** (Analyst, Search Reviews, Search Tickets). This means the **external client** (e.g., Bedrock AgentCore) is responsible for orchestration — deciding which tools to call, in what order, and how to combine results.
+The MCP server we just created (`RETAILIQ_MCP_SERVER`) exposes **individual tools** (Analyst, Search Reviews, Search Tickets). This means the **external client** (e.g., Strands Agent) is responsible for orchestration — deciding which tools to call, in what order, and how to combine results.
 
 There's an alternative approach: expose the **Cortex Agent itself** as a single MCP tool. In this case, **Snowflake handles all orchestration** internally (tool selection, multi-hop reasoning, response synthesis), and the external client simply sends a question and receives a complete answer.
 
@@ -709,7 +693,7 @@ There's an alternative approach: expose the **Cortex Agent itself** as a single 
 |---|---|---|
 | **MCP Server** | `RETAILIQ_MCP_SERVER` | `RETAILIQ_MCP_SERVER_AGENT` |
 | **Tools exposed** | 3 (analyst + 2 search) | 1 (the cortex agent) |
-| **Orchestration** | External (AWS Bedrock decides) | Internal (Snowflake Cortex Agent decides) |
+| **Orchestration** | External (Strands Agent decides) | Internal (Snowflake Cortex Agent decides) |
 | **Best for** | Full control on AWS side, custom routing logic | Simplicity, governed responses, single entry point |
 | **Latency** | Multiple round-trips possible | Single call, Snowflake orchestrates internally |
 
@@ -729,7 +713,7 @@ SHOW MCP SERVERS IN SCHEMA RETAILIQ_DB.ANALYTICS;
 
 ---
 
-### Module 6 — AWS Bedrock AgentCore Setup `[15 min]`
+### Module 6 — AWS Strands Agent Setup `[15 min]`
 
 **Deploy the CloudFormation stack:**
 
@@ -793,7 +777,7 @@ You'll see the welcome banner. Test with the sample questions from `help`:
 
 <img src="assets/strands2.jpg" width="700">
 
-**Multi-turn demo** (shows AgentCore Memory value):
+**Multi-turn demo** (shows Strands Agent multi-turn context):
 
 ```
 > Analyze revenue by region for this year
@@ -818,17 +802,17 @@ You'll see the welcome banner. Test with the sample questions from `help`:
 | Role | RETAILIQ_ROLE | Least-privilege read-only role |
 | Warehouse | XSmall | Auto-scaling cluster |
 | MCP scope | All tools | Tool-level RBAC per team |
-| Monitoring | Console logs | AgentCore traces + Snowflake QUERY_HISTORY |
+| Monitoring | Console logs | CloudWatch + Snowflake QUERY_HISTORY |
 
-**Security pattern — lock down MCP to AgentCore IPs only:**
+**Security pattern — lock down MCP to EC2 IPs only:**
 
 ```sql
--- After getting AgentCore NAT Gateway IPs from AWS:
-CREATE OR REPLACE NETWORK POLICY agentcore_only
-  ALLOWED_IP_LIST = ('X.X.X.X/32', 'Y.Y.Y.Y/32')  -- AgentCore NAT IPs
-  COMMENT = 'Restrict MCP access to AgentCore egress IPs only';
+-- After getting EC2 NAT Gateway / Elastic IP from AWS:
+CREATE OR REPLACE NETWORK POLICY ec2_only
+  ALLOWED_IP_LIST = ('X.X.X.X/32', 'Y.Y.Y.Y/32')  -- EC2 egress IPs
+  COMMENT = 'Restrict MCP access to EC2 egress IPs only';
 
-ALTER USER retailiq_user SET NETWORK_POLICY = agentcore_only;
+ALTER USER retailiq_user SET NETWORK_POLICY = ec2_only;
 ```
 
 **Seed Q&A questions (for facilitators):**
@@ -837,11 +821,11 @@ ALTER USER retailiq_user SET NETWORK_POLICY = agentcore_only;
 
 - *"What's the latency like?"* → Typical: Analyst ~2-5s, Search ~1-2s, full agent turn ~5-12s
 
-- *"Does AgentCore support streaming?"* → Yes, the Strands SDK supports streaming responses
+- *"Does Strands support streaming?"* → Yes, the Strands SDK supports streaming responses
 
 - *"Can multiple teams share the same MCP server?"* → Yes, tool-level access is controlled by role grants
 
-- *"Is there a cost calculator?"* → Show Cortex token pricing + AgentCore runtime pricing
+- *"Is there a cost calculator?"* → Show Cortex token pricing + Bedrock model pricing
 
 ---
 
@@ -849,7 +833,7 @@ ALTER USER retailiq_user SET NETWORK_POLICY = agentcore_only;
 
 Run `01_snowflake_setup/07_cleanup.sql` to remove all Snowflake objects.
 
-In AWS: delete the CloudFormation stack (`agentcore-retailiq-workshop`).
+In AWS: delete the CloudFormation stack (`retailiq-workshop`).
 
 ---
 
@@ -863,7 +847,7 @@ In AWS: delete the CloudFormation stack (`agentcore-retailiq-workshop`).
 
 - [Cortex Search](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview)
 
-- [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/)
+- [Amazon Bedrock](https://aws.amazon.com/bedrock/)
 
 - [Strands Agents SDK](https://strandsagents.com)
 
