@@ -250,9 +250,15 @@ def build_agent(mcp_endpoint: str, pat_token: str) -> Agent:
     # MCPClient connects to the server and discovers available tools
     snowflake_mcp = MCPClient(transport_callable)
 
-    # Strands Agent — model ID string auto-resolves to Bedrock using instance role
+    # Strands Agent — explicitly set Bedrock region to match the EU model prefix
+    from strands.models.bedrock import BedrockModel
+    bedrock_model = BedrockModel(
+        model_id=BEDROCK_MODEL_ID,
+        region_name=AWS_REGION,
+    )
+
     agent = Agent(
-        model=BEDROCK_MODEL_ID,
+        model=bedrock_model,
         system_prompt=SYSTEM_PROMPT,
         tools=[snowflake_mcp],
     )

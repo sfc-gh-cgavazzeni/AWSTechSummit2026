@@ -736,6 +736,24 @@ ls -la  # verify files are present
 python3.11 --version  # should be 3.11+
 ```
 
+> **Troubleshooting: `/opt/retailiq` directory not found**
+>
+> If you connect via SSM and the `/opt/retailiq` directory doesn't exist yet, don't panic — the EC2 instance shows as "running" in the console as soon as it boots, but the **UserData provisioning script** (which installs Python, pip packages, and downloads the agent code) can take **10-15 minutes** to complete. The instance being "running" does not mean provisioning is finished.
+>
+> To check progress:
+> ```bash
+> # See if provisioning is still running:
+> ps aux | grep -E "dnf|pip|curl"
+>
+> # Check the provisioning log:
+> cat /var/log/retailiq-setup.log
+>
+> # Check cloud-init status (should say "done" when finished):
+> cloud-init status
+> ```
+>
+> Wait for the CloudFormation stack status to reach **`CREATE_COMPLETE`** — that's the signal that all UserData steps (including `cfn-signal`) have succeeded. If the stack goes to `ROLLBACK`, check the log above for the failure.
+
 ---
 
 ### Module 7 — Strands Agent End-to-End `[10 min]`
@@ -779,6 +797,59 @@ You'll see the welcome banner. Test with the sample questions from `help`:
 > What actions would you recommend for those regions?
 [Agent synthesizes both data streams into recommendations]
 ```
+
+---
+
+#### Agent Observability — Monitoring from Snowsight
+
+Once you've run a few queries through the agent (either from EC2 or from Snowflake CoWork), Snowflake provides **built-in observability** for every Cortex Agent interaction — no additional instrumentation required. This is analogous to AWS CloudWatch Traces, but purpose-built for AI agent workflows with full visibility into tool calls, planning steps, and token consumption.
+
+**Step 1 — Navigate to the Agents list**
+
+In Snowsight, click **AI & ML** in the left sidebar, then select **Agents** from the submenu. You'll see the list of all agents in your account, including `RETAILIQ_CORTEX_AGENT` with its usage count.
+
+<img src="assets/observability1.jpg" width="700">
+
+**Step 2 — Open the Observability tab**
+
+Click on `RETAILIQ_CORTEX_AGENT` to open it, then select the **Observability** tab. This dashboard gives you an at-a-glance view of:
+
+- **Total sessions** — number of distinct conversations
+- **Total tokens** — cumulative input + output token usage (directly maps to cost)
+- **Total active users** — unique users who interacted with the agent
+- **Usage trend** — time series showing when the agent was used
+
+This is your operational dashboard for monitoring agent adoption and cost. For AWS Solution Architects familiar with CloudWatch dashboards, think of this as the equivalent — but automatically generated with zero configuration.
+
+<img src="assets/observability2.jpg" width="700">
+
+**Step 3 — Inspect individual traces**
+
+Click on any session in the list to open the **Traces** view. This is where the real power lies — you get a full breakdown of every step the agent took to answer a question:
+
+<img src="assets/observability3.jpg" width="700">
+
+The trace view shows:
+
+| Column | What it tells you |
+|--------|------------------|
+| **Thread details** | Request ID, timestamp, success/failure status |
+| **Agent timeline** | Waterfall of every step with elapsed time (like X-Ray traces) |
+| **Input/Output tokens** | Exact token counts per request (Plan: 12,495 / Output: 4,194 in this example) |
+
+**Reading the timeline (left to right):**
+
+1. **LLM Planning** (8.5s) — the model reasons about which tools to call
+2. **Cortex Search** (226ms, 217ms, 217ms, 219ms) — multiple search calls to the reviews index
+3. **LLM Planning** (4.1s) — processes search results, decides next action
+4. **Semantic Context** (47ms) — loads the Semantic View schema
+5. **LLM Planning** (8.4s) — generates the SQL query
+6. **SQL Execution** (1.1s) — runs the generated query against the warehouse
+7. **LLM Planning** (5.3s) — interprets results and plans the chart
+8. **Chart Generation** (410ms) — creates the visualization
+9. **LLM Response Generation** (27.4s) — synthesizes the final natural language answer
+
+**Key takeaway for AWS Solution Architects:** This is production-grade observability out of the box. Every agent invocation — whether from CoWork, the MCP server, or the REST API — is traced automatically. You can identify bottlenecks (is it the LLM planning that's slow, or the SQL execution?), monitor token costs, and debug failures without adding any instrumentation code. Compare this to building a similar trace pipeline manually with OpenTelemetry + X-Ray + custom middleware.
 
 ---
 
