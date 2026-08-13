@@ -99,5 +99,20 @@ DESCRIBE MCP SERVER RETAILIQ_DB.ANALYTICS.RETAILIQ_MCP_SERVER;
 -- }
 
 -- ==================================================================================
+-- USER-LEVEL NETWORK POLICY (required for external MCP access)
+-- ==================================================================================
+-- Most Snowflake accounts have an account-level network policy that only allows
+-- corporate VPN IPs. The EC2 instance's IP won't be in that list.
+-- A user-level policy on retailiq_user overrides the account policy for that user only.
+
+USE ROLE ACCOUNTADMIN;
+
+CREATE OR REPLACE NETWORK POLICY RETAILIQ_USER_POLICY
+  ALLOWED_IP_LIST = ('0.0.0.0/0')
+  COMMENT = 'Allow retailiq_user MCP access from any IP (workshop)';
+
+ALTER USER RETAILIQ_USER SET NETWORK_POLICY = RETAILIQ_USER_POLICY;
+
+-- ==================================================================================
 -- END OF MODULE 5
 -- ==================================================================================

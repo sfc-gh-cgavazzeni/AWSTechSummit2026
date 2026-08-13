@@ -637,13 +637,13 @@ Now that we have both Cortex Analyst (Semantic View) and Cortex Search (2 servic
 
 ### Module 5 — Snowflake Managed MCP Server `[10 min]`
 
-In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and open **`01_create_mcp_server.sql`** — but do not run all statements in a row. Here we need some edits.
+In your workspace, navigate to `WORKSHOP_RETAIL_IQ > 03_aws_setup` and open **`01_create_mcp_server.sql`** — but do not run all statements in a row. We need to take note of the PAT token and account locator.
 
 First, you need your account locator. Click on the **bottom-left circle** in Snowsight → **Account** → **Account details** and copy the account locator value.
 
 <img src="assets/account_details.jpg" width="400">
 
-Then edit the script replacing `YOUR_ACCOUNT_LOCATOR` with the value you just copied. Now open the folder `03_aws_setup` in your workspace, open `01_create_mcp_server.sql` and run it line by line.
+Open `01_create_mcp_server.sql` and run it line by line.
 
 The MCP Server endpoint URL follows a fixed pattern — no need to run DESCRIBE:
 ```
@@ -660,18 +660,7 @@ ALTER USER retailiq_user ADD PROGRAMMATIC ACCESS TOKEN retailiq_mcp_token
   ROLE_RESTRICTION = 'RETAILIQ_ROLE';
 ```
 
-**Create a user-level network policy** to allow external MCP access from AWS:
-
-```sql
--- Required: bypasses the account-level VPN policy for the MCP service user
-CREATE OR REPLACE NETWORK POLICY RETAILIQ_USER_POLICY
-  ALLOWED_IP_LIST = ('0.0.0.0/0')
-  COMMENT = 'Allow retailiq_user MCP access from any IP (workshop)';
-
-ALTER USER retailiq_user SET NETWORK_POLICY = RETAILIQ_USER_POLICY;
-```
-
-> **Why?** Most Snowflake accounts have an account-level network policy that only allows corporate VPN IPs. The EC2 instance's IP won't be in that list. A user-level policy on `retailiq_user` overrides the account policy for that specific user only.
+> **Why the network policy?** Most Snowflake accounts have an account-level network policy that only allows corporate VPN IPs. The EC2 instance's IP won't be in that list. A user-level policy on `retailiq_user` overrides the account policy for that specific user only.
 
 **What to save before the next module:**
 ```
